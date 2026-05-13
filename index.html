@@ -2,11 +2,13 @@
 <html>
   <head>
     <meta charset="utf-8">
+    <title>寻宝洛阳 - 连环密室</title>
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <style>
+      /* 这里的标签修好了！ */
       #ui { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 10; color: white; text-align: center; font-family: sans-serif; pointer-events: none; }
-      .msg-box { background: rgba(0,0,0,0.7); padding: 15px; border-radius: 10px; display: none; pointer-events: auto; }
-    </script>
+      .msg-box { background: rgba(0,0,0,0.7); padding: 15px; border-radius: 10px; display: none; pointer-events: auto; font-size: 18px; border: 1px solid #d4af37; box-shadow: 0 0 10px #d4af37; }
+    </style>
   </head>
   <body>
     <div id="ui">
@@ -42,7 +44,8 @@
       function changeRoom(imgId, text) {
         document.querySelector('#main-sky').setAttribute('src', imgId);
         showMsg(text);
-        // 这里可以添加逻辑：隐藏旧场景物体，显示新场景物体
+        
+        // 当进入第二关时，隐藏第一关的球，显示第二关的宝箱
         if(imgId === '#r2') {
             document.querySelector('#scene1-stuff').setAttribute('visible', 'false');
             document.querySelector('#scene2-stuff').setAttribute('visible', 'true');
