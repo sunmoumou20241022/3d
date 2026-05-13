@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <style>
+      #ui { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 10; color: white; text-align: center; font-family: sans-serif; pointer-events: none; }
+      .msg-box { background: rgba(0,0,0,0.7); padding: 15px; border-radius: 10px; display: none; pointer-events: auto; }
+    </script>
+  </head>
+  <body>
+    <div id="ui">
+      <div id="msg" class="msg-box"></div>
+    </div>
+
+    <a-scene>
+      <a-assets>
+        <img id="r1" src="room1.jpg">
+        <img id="r2" src="room2.jpg">
+        <img id="r3" src="room3.jpg">
+        <img id="r4" src="room4.jpg">
+      </a-assets>
+
+      <a-sky id="main-sky" src="#r1" rotation="0 -90 0"></a-sky>
+
+      <a-entity camera look-controls>
+        <a-cursor fuse="false" raycaster="objects: .interactive" color="yellow"></a-cursor>
+      </a-entity>
+
+      <a-entity id="scene1-stuff">
+        <a-sphere class="interactive" position="0 0 -5" radius="0.3" color="cyan" 
+                  onclick="changeRoom('#r2', '进入了：胡商藏经阁')"></a-sphere>
+      </a-entity>
+
+      <a-entity id="scene2-stuff" visible="false">
+        <a-box class="interactive" position="2 -1 -4" scale="0.5 0.5 0.5" color="gold"
+               onclick="showMsg('你找到了：西域商路地图！')"></a-box>
+      </a-entity>
+    </a-scene>
+
+    <script>
+      function changeRoom(imgId, text) {
+        document.querySelector('#main-sky').setAttribute('src', imgId);
+        showMsg(text);
+        // 这里可以添加逻辑：隐藏旧场景物体，显示新场景物体
+        if(imgId === '#r2') {
+            document.querySelector('#scene1-stuff').setAttribute('visible', 'false');
+            document.querySelector('#scene2-stuff').setAttribute('visible', 'true');
+        }
+      }
+
+      function showMsg(text) {
+        const box = document.querySelector('#msg');
+        box.innerText = text;
+        box.style.display = 'block';
+        setTimeout(() => { box.style.display = 'none'; }, 3000);
+      }
+    </script>
+  </body>
+</html>
