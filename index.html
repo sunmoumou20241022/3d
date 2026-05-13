@@ -2,117 +2,60 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>寻宝洛阳 - 连环密室：大升级版</title>
+    <title>寻宝洛阳 - 连环密室：大升级稳定版</title>
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <style>
-      /* 游戏UI界面 (精美装修过，更贴合古风) */
       #ui { position: absolute; top: 15%; left: 50%; transform: translateX(-50%); z-index: 10; color: #fff; text-align: center; font-family: '楷体', sans-serif; pointer-events: none; width: 85%;}
       .msg-box { background: rgba(15, 8, 3, 0.9); padding: 25px; border-radius: 10px; display: none; pointer-events: auto; font-size: 24px; border: 2px solid #d4af37; box-shadow: 0 0 20px #d4af37; text-shadow: 1px 1px 2px black; line-height: 1.5;}
-      #inventory { position: absolute; bottom: 20px; left: 20px; z-index: 10; color: #d4af37; font-size: 20px; font-weight: bold; background: rgba(0,0,0,0.6); padding: 12px; border: 1px solid #d4af37; border-radius: 6px; box-shadow: 0 0 5px #d4af37;}
+      #inventory { position: absolute; bottom: 20px; left: 20px; z-index: 10; color: #d4af37; font-size: 20px; font-weight: bold; background: rgba(0,0,0,0.6); padding: 12px; border: 1px solid #d4af37; border-radius: 6px;}
     </style>
   </head>
   <body>
-    <div id="ui">
-      <div id="msg" class="msg-box"></div>
-    </div>
-    
+    <div id="ui"><div id="msg" class="msg-box"></div></div>
     <div id="inventory">背包：空空如也</div>
 
     <a-scene>
-      <a-assets>
-        <img id="r1" src="room1.jpg">
-        <img id="r2" src="room2.jpg">
-        <img id="jade-tablet" src="tablet.png">
-      </a-assets>
-
-      <a-sky id="main-sky" src="#r1" rotation="0 -90 0"></a-sky>
+      <a-sky id="main-sky" src="room1.jpg" rotation="0 -90 0"></a-sky>
 
       <a-entity camera look-controls>
         <a-cursor fuse="true" fuse-timeout="1500" raycaster="objects: .interactive" color="#d4af37"></a-cursor>
       </a-entity>
-
-      <a-image id="jade" class="interactive" src="#jade-tablet" position="2.5 -1.2 -3.5" rotation="-15 45 0" scale="0.8 0.8 0.8"
+      
+      <a-image id="jade" class="interactive" src="tablet.png" crossOrigin="anonymous" 
+               position="2.5 -1.2 -3.5" rotation="-15 45 0" scale="0.8 0.8 0.8"
                animation="property: scale; dir: alternate; dur: 1200; to: 0.9 0.9 0.9; loop: true"
                animation__rotation="property: rotation; to: -15 405 0; dur: 10000; loop: true; easing: linear"
                onclick="collectJade()"></a-image>
 
-      <a-torus-knot id="shrine" class="interactive" position="-1 0.2 -4.8" radius="0.3" radius-tubular="0.05" color="#8b4513" opacity="0.8"
-                   animation="property: rotation; to: 360 360 0; dur: 5000; loop: true; easing: linear"
-                   onclick="tryPlaceJade()"></a-torus-knot>
+      <a-torus id="shrine" class="interactive" position="-1 0.2 -4.8" radius="0.25" radius-tubular="0.03" color="#8b4513" opacity="0.8"
+               animation="property: rotation; to: 360 360 0; dur: 5000; loop: true; easing: linear"
+                   onclick="tryPlaceJade()"></a-torus>
 
       <a-circle id="door" position="-1 -0.5 -4.8" radius="0.5" color="#00FFFF" opacity="0.01" rotation="-90 0 0" visible="false"></a-circle>
 
     </a-scene>
 
     <script>
-      // 游戏硬核逻辑状态机
-      let hasJade = false; // 评委拿到玉牌了吗？
-      let isShrineActivated = false; // 评委把玉牌放进神龛了吗？
-
-      // 动作1：捡起高清玉牌
+      let hasJade = false; let isShrineActivated = false;
       function collectJade() {
         if(!hasJade) {
-          hasJade = true; 
-          document.querySelector('#jade').setAttribute('visible', 'false'); // 玉牌消失
-          document.querySelector('#jade').classList.remove('interactive'); // 移除点击属性
-          
-          showMsg('天降宏运！你竟然在乱石中翻到一块罕见的【透雕龙纹玉牌】！\n这可是打开唐代机关的必备之物。');
+          hasJade = true; document.querySelector('#jade').setAttribute('visible', 'false'); document.querySelector('#jade').classList.remove('interactive');
+          showMsg('获得线索：【透雕龙纹玉牌】！\n似乎可以和那个神秘神龛匹配。');
           document.querySelector('#inventory').innerText = '背包：【透雕龙纹玉牌】';
-          
-          // 给神龛增加点发光提示
           document.querySelector('#shrine').setAttribute('color', '#FFD700');
         }
       }
-
-      // 动作2：尝试把玉牌放进神龛
       function tryPlaceJade() {
-        if(isShrineActivated) return; // 已经激活了，不用再点了
-
+        if(isShrineActivated) return;
         if(hasJade) {
-          // 成功把玉牌镶嵌进去
-          isShrineActivated = true;
-          
-          // 视觉大高潮：神龛和背包更新
-          document.querySelector('#shrine').setAttribute('color', '#FFD700');
-          document.querySelector('#shrine').setAttribute('material', 'emissive', '#FFD700'); // 让它发光
+          isShrineActivated = true; document.querySelector('#shrine').setAttribute('material', 'emissive', '#FFD700');
           document.querySelector('#inventory').innerText = '背包：空空如也';
-
-          showMsg('咔哒...\n玉牌严丝合缝地嵌入神龛。\n密室四周传来轰鸣声，通往藏经阁的法阵似乎显现了！');
-          
-          // 显示并激活最终传送门
-          const door = document.querySelector('#door');
-          door.setAttribute('visible', 'true');
-          door.setAttribute('opacity', '0.6');
-          door.classList.add('interactive');
-          door.setAttribute('onclick', "teleportToRoom2()");
-        } else {
-          // 如果没玉牌，拒绝激活
-          showMsg('这是一个神秘的木质神龛，上面有一个凹槽...\n（提示：先在四周找找符合这个凹槽形状的线索）');
-        }
+          showMsg('咔哒...\n玉牌严丝合缝嵌入凹槽，石壁震动，传送法阵显现！');
+          const door = document.querySelector('#door'); door.setAttribute('visible', 'true'); door.setAttribute('opacity', '0.6'); door.classList.add('interactive'); door.setAttribute('onclick', "teleportToRoom2()");
+        } else { showMsg('神龛凹槽深不见底，似乎在等待某种特定图案的玉器...'); }
       }
-      
-      // 动作3：真正的传送
-      function teleportToRoom2() {
-          document.querySelector('#main-sky').setAttribute('src', '#r2'); // 切换背景
-          
-          // 隐藏第一关所有交互物
-          document.querySelector('#shrine').setAttribute('visible', 'false');
-          document.querySelector('#door').setAttribute('visible', 'false');
-          
-          showMsg('法阵启动...\n你被传送到了【胡商藏经阁】');
-      }
-
-      // 显示弹窗的辅助函数
-      function showMsg(text) {
-        const box = document.querySelector('#msg');
-        box.innerText = text;
-        box.style.display = 'block';
-        // 如果是通关消息，常驻显示不自动关
-        if(text.indexOf('咔哒') !== -1) {
-            return;
-        }
-        setTimeout(() => { box.style.display = 'none'; }, 5000); // 5秒后自动关闭
-      }
+      function teleportToRoom2() { document.querySelector('#main-sky').setAttribute('src', 'room2.jpg'); document.querySelector('#shrine').setAttribute('visible', 'false'); document.querySelector('#door').setAttribute('visible', 'false'); showMsg('进入了【胡商藏经阁】'); }
+      function showMsg(text) { const box = document.querySelector('#msg'); box.innerText = text; box.style.display = 'block'; setTimeout(() => { box.style.display = 'none'; }, 4500); }
     </script>
   </body>
 </html>
