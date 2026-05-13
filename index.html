@@ -5,58 +5,80 @@
     <title>寻宝洛阳 - 连环密室</title>
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <style>
-      /* 这里的标签修好了！ */
-      #ui { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 10; color: white; text-align: center; font-family: sans-serif; pointer-events: none; }
-      .msg-box { background: rgba(0,0,0,0.7); padding: 15px; border-radius: 10px; display: none; pointer-events: auto; font-size: 18px; border: 1px solid #d4af37; box-shadow: 0 0 10px #d4af37; }
+      /* 游戏UI界面 */
+      #ui { position: absolute; top: 20%; left: 50%; transform: translateX(-50%); z-index: 10; color: #fff; text-align: center; font-family: '楷体', sans-serif; pointer-events: none; width: 80%;}
+      .msg-box { background: rgba(20, 10, 5, 0.85); padding: 20px; border-radius: 8px; display: none; pointer-events: auto; font-size: 22px; border: 2px solid #d4af37; box-shadow: 0 0 15px #d4af37; text-shadow: 1px 1px 2px black;}
+      #inventory { position: absolute; bottom: 20px; left: 20px; z-index: 10; color: #d4af37; font-size: 18px; font-weight: bold; background: rgba(0,0,0,0.5); padding: 10px; border: 1px solid #d4af37; border-radius: 5px;}
     </style>
   </head>
   <body>
     <div id="ui">
       <div id="msg" class="msg-box"></div>
     </div>
+    
+    <div id="inventory">背包：空空如也</div>
 
     <a-scene>
       <a-assets>
         <img id="r1" src="room1.jpg">
         <img id="r2" src="room2.jpg">
-        <img id="r3" src="room3.jpg">
-        <img id="r4" src="room4.jpg">
       </a-assets>
 
       <a-sky id="main-sky" src="#r1" rotation="0 -90 0"></a-sky>
 
       <a-entity camera look-controls>
-        <a-cursor fuse="false" raycaster="objects: .interactive" color="yellow"></a-cursor>
+        <a-cursor fuse="false" raycaster="objects: .interactive" color="red"></a-cursor>
       </a-entity>
 
-      <a-entity id="scene1-stuff">
-        <a-sphere class="interactive" position="0 0 -5" radius="0.3" color="cyan" 
-                  onclick="changeRoom('#r2', '进入了：胡商藏经阁')"></a-sphere>
-      </a-entity>
+      <a-box id="clue1" class="interactive" position="2 -1.5 -3" scale="0.4 0.2 0.3" color="#FFD700" 
+             animation="property: rotation; to: 0 360 0; loop: true; dur: 3000"
+             onclick="collectItem()"></a-box>
 
-      <a-entity id="scene2-stuff" visible="false">
-        <a-box class="interactive" position="2 -1 -4" scale="0.5 0.5 0.5" color="gold"
-               onclick="showMsg('你找到了：西域商路地图！')"></a-box>
-      </a-entity>
+      <a-sphere id="door" class="interactive" position="-1 0 -5" radius="0.4" color="#00FFFF" opacity="0.6"
+                animation="property: scale; dir: alternate; dur: 1000; to: 1.2 1.2 1.2; loop: true"
+                onclick="tryOpenDoor()"></a-sphere>
+
     </a-scene>
 
     <script>
-      function changeRoom(imgId, text) {
-        document.querySelector('#main-sky').setAttribute('src', imgId);
-        showMsg(text);
-        
-        // 当进入第二关时，隐藏第一关的球，显示第二关的宝箱
-        if(imgId === '#r2') {
-            document.querySelector('#scene1-stuff').setAttribute('visible', 'false');
-            document.querySelector('#scene2-stuff').setAttribute('visible', 'true');
+      // 游戏核心逻辑：玩家有没有拿到钥匙？
+      let hasKey = false;
+
+      // 动作1：捡起金砖
+      function collectItem() {
+        if(!hasKey) {
+          hasKey = true; // 拿到钥匙！
+          document.querySelector('#clue1').setAttribute('visible', 'false'); // 金砖消失
+          document.querySelector('#clue1').classList.remove('interactive'); // 移除点击属性
+          
+          // 更新UI
+          showMsg('获得线索：【通关玉牌】！\n前方出口的封印似乎松动了。');
+          document.querySelector('#inventory').innerText = '背包：【通关玉牌】';
         }
       }
 
+      // 动作2：尝试进入下一个房间
+      function tryOpenDoor() {
+        if(hasKey) {
+          // 如果有钥匙，切换到第二关
+          document.querySelector('#main-sky').setAttribute('src', '#r2');
+          document.querySelector('#door').setAttribute('visible', 'false'); // 隐藏传送球
+          document.querySelector('#door').classList.remove('interactive');
+          showMsg('一阵天旋地转...\n你来到了【胡商藏经阁】');
+          document.querySelector('#inventory').innerText = '背包：空空如也';
+          // 这里以后可以继续添加显示第二关宝物的代码
+        } else {
+          // 如果没钥匙，拒绝通行
+          showMsg('洞口有神秘的结界挡住了去路...\n（提示：先在四周找找发光的线索）');
+        }
+      }
+
+      // 显示弹窗的辅助函数
       function showMsg(text) {
         const box = document.querySelector('#msg');
         box.innerText = text;
         box.style.display = 'block';
-        setTimeout(() => { box.style.display = 'none'; }, 3000);
+        setTimeout(() => { box.style.display = 'none'; }, 3500); // 3.5秒后自动关闭
       }
     </script>
   </body>
