@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>寻宝洛阳 - 视听完全体 (终极版)</title>
+    <title>寻宝洛阳 - 本地视听终极版</title>
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <style>
       body { font-family: '楷体', 'STKaiti', serif; margin: 0; overflow: hidden; background: #000; }
@@ -113,22 +113,24 @@
       let currentLevel = 1;
       let audioUnlocked = false;
 
-      // 音频资源实例 (确保同级目录下存在 bgm1.mp3, bgm2.mp3, bgm3.mp3)
-      const audioBgm1 = new Audio('bgm1.mp3'); audioBgm1.loop = true; audioBgm1.volume = 0.5;
-      const audioBgm2 = new Audio('bgm2.mp3'); audioBgm2.loop = true; audioBgm2.volume = 0.5;
+      // 核心替换：加载你本地下载好的全套 MP3 资产
+      const audioBgm1 = new Audio('cave.mp3'); audioBgm1.loop = true; audioBgm1.volume = 0.5;
+      const audioBgm2 = new Audio('bgm2.mp3'); audioBgm2.loop = true; audioBgm2.volume = 0.5; // 如果你只有cave.mp3，可将此处也换成cave.mp3
       const audioBgm3 = new Audio('bgm3.mp3'); audioBgm3.loop = true; audioBgm3.volume = 0.5;
       
-      const sfxClick = new Audio('https://cdn.pixabay.com/download/audio/2022/03/15/audio_78f1082522.mp3');
-      const sfxRumble = new Audio('https://cdn.pixabay.com/download/audio/2022/01/18/audio_845db826b5.mp3');
+      const sfxUi = new Audio('ui.mp3');
+      const sfxDoor = new Audio('door.mp3');
+      const sfxPaper = new Audio('paper.mp3');
+      const sfxMetal = new Audio('metal.mp3');
 
       let currentBgm = null;
 
-      // 核心安全机制：由用户交互手势触发的全局音频解锁
+      // 静默解锁所有实例化音频
       function unlockAudio() {
           if (audioUnlocked) return;
-          const allAudioObjects = [audioBgm1, audioBgm2, audioBgm3, sfxClick, sfxRumble];
+          const allAudioObjects = [audioBgm1, audioBgm2, audioBgm3, sfxUi, sfxDoor, sfxPaper, sfxMetal];
           allAudioObjects.forEach(audio => {
-              audio.volume = 0; // 静默解锁
+              audio.volume = 0; 
               let playPromise = audio.play();
               if (playPromise !== undefined) {
                   playPromise.then(_ => {
@@ -141,21 +143,19 @@
           audioUnlocked = true;
       }
 
-      // 播放交互音效的封装函数
+      // 细粒度播放触发器
       function playSFX(sfxObj) {
           sfxObj.currentTime = 0; 
           sfxObj.play().catch(e => console.log('SFX blocked:', e));
       }
 
-      // 游戏初始化
       document.getElementById('start-btn').addEventListener('click', () => {
-        unlockAudio(); // 瞬间解锁所有音频状态机
+        unlockAudio();
         document.getElementById('start-screen').style.display = 'none';
         document.getElementById('transition-screen').style.opacity = '0';
         
-        // 延迟播放主背景音
         setTimeout(() => {
-            currentBgm = audioBgm1;
+            currentBgm = audioBgm1; // 启动古墓底噪 (cave.mp3)
             currentBgm.play().catch(e => console.log('BGM1 blocked:', e)); 
         }, 100);
       });
@@ -180,54 +180,57 @@
       // ================= 业务交互逻辑 =================
       function openPuzzle(num) { 
         if (num !== currentLevel) return;
-        playSFX(sfxClick);
+        playSFX(sfxUi); // 触发 UI 点击声
         document.getElementById('puzzle-' + num).style.display = 'flex'; 
       }
       function closePuzzle(num) { 
-        playSFX(sfxClick);
+        playSFX(sfxUi);
         document.getElementById('puzzle-' + num).style.display = 'none'; 
       }
       
       function openEasterEgg() { 
           if(currentLevel === 1) {
-             playSFX(sfxClick);
+             playSFX(sfxUi);
              document.getElementById('easter-egg-panel').style.display = 'flex'; 
           }
       }
       function closeEasterEgg() { 
-          playSFX(sfxClick);
+          playSFX(sfxUi);
           document.getElementById('easter-egg-panel').style.display = 'none'; 
           document.getElementById('hotspot-egg').setAttribute('visible', 'false'); 
           document.getElementById('hotspot-egg').classList.remove('interactive');
       }
 
       function checkAnswer1(result) {
-        playSFX(sfxClick);
+        playSFX(sfxUi);
         if (result === 'correct') {
           closePuzzle(1);
           closeEasterEgg();
-          startTransition('机关轰鸣，天旋地转...', 'room2.jpg', 'hotspot-1', 'hotspot-2', '轰隆隆...\n石壁裂开，你进入了【胡商藏经阁】', 2, audioBgm1);
+          // 第一关通关：播放石门开启声 (door.mp3)
+          startTransition('机关轰鸣，天旋地转...', 'room2.jpg', 'hotspot-1', 'hotspot-2', '轰隆隆...\n石壁裂开，你进入了【胡商藏经阁】', 2, null, sfxDoor);
         } else { showMsg('石壁纹丝不动... (提示：选B)'); }
       }
 
       function checkAnswer2(result) {
-        playSFX(sfxClick);
+        playSFX(sfxUi);
         if (result === 'correct') {
           closePuzzle(2);
-          startTransition('丝帛燃烧，书架缓缓移开...', 'room3.jpg', 'hotspot-2', 'hotspot-3', '你发现了深渊底部的【青铜机关室】！', 3, audioBgm2);
+          // 第二关通关：播放丝帛燃烧声 (paper.mp3)
+          startTransition('丝帛燃烧，书架缓缓移开...', 'room3.jpg', 'hotspot-2', 'hotspot-3', '你发现了深渊底部的【青铜机关室】！', 3, audioBgm2, sfxPaper);
         } else { showMsg('口令错误，密卷上的文字变得模糊... (提示：选B)'); }
       }
 
       function checkAnswer3(result) {
-        playSFX(sfxClick);
+        playSFX(sfxUi);
         if (result === 'correct') {
           closePuzzle(3);
-          startTransition('青铜巨门缓缓开启，万丈佛光倾泻而出...', 'room4.jpg', 'hotspot-3', null, '震撼！你抵达了终极宝藏：【大唐龙门佛窟】！\n(演示大结局)', 4, audioBgm3);
+          // 第三关通关：播放齿轮金属声 (metal.mp3)
+          startTransition('青铜巨门缓缓开启，万丈佛光倾泻而出...', 'room4.jpg', 'hotspot-3', null, '震撼！你抵达了终极宝藏：【大唐龙门佛窟】！\n(演示大结局)', 4, audioBgm3, sfxMetal);
         } else { showMsg('齿轮发出刺耳的摩擦声... (提示：选B)'); }
       }
 
-      // 转场状态机
-      function startTransition(transTextMsg, nextImageId, oldHotspotId, newHotspotId, successMsg, nextLevelNum, nextBgmTarget) {
+      // 转场状态机升级：接收专属过场音效 transSfx
+      function startTransition(transTextMsg, nextImageId, oldHotspotId, newHotspotId, successMsg, nextLevelNum, nextBgmTarget, transSfx) {
         const transScreen = document.getElementById('transition-screen');
         const transText = document.getElementById('trans-text');
         const dynLight = document.getElementById('dynamic-light');
@@ -239,7 +242,7 @@
         
         currentLevel = -1; // 锁定态
         
-        playSFX(sfxRumble); // 播放沉重机关音效
+        if(transSfx) playSFX(transSfx); // 播放对应的细节音效 (开门/燃烧/齿轮)
 
         setTimeout(() => { transText.style.opacity = '1'; }, 800);
 
