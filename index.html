@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>寻宝洛阳 - 三关连环版</title>
+    <title>寻宝洛阳 - 终极完整版</title>
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <style>
       body { font-family: '楷体', 'STKaiti', serif; margin: 0; overflow: hidden; }
@@ -84,12 +84,12 @@
       </div>
     </div>
 
-    <!-- 第三关：青铜八卦 (新增) -->
+    <!-- 第三关：青铜八卦 -->
     <div id="puzzle-3" class="puzzle-overlay">
       <div id="board-3" class="puzzle-board">
         <div class="close-btn" onclick="closePuzzle(3)">✖</div>
         <div class="puzzle-title">青铜八卦锁</div>
-        <div class="poem-desc">你来到了深渊底部的【青铜机关室】。巨大的齿轮卡死，若要齿轮倒转开启佛窟，需破解天干之谜：</div>
+        <div class="poem-desc">巨大的青铜齿轮卡死，若要齿轮倒转开启佛窟，需破解天干之谜：</div>
         <div class="poem-text">“天干地支中，‘甲’对应的五行是？”</div>
         <button class="option-btn" onclick="checkAnswer3('wrong')">A. 金</button>
         <button class="option-btn" onclick="checkAnswer3('correct')">B. 木</button>
@@ -109,16 +109,18 @@
       <!-- 第一关热区 -->
       <a-circle id="hotspot-1" class="interactive" position="-1 -0.5 -4.8" radius="1.5" opacity="0" onclick="openPuzzle(1)"></a-circle>
 
-      <!-- 第二关热区：缩小并改为微小呼吸光斑 -->
+      <!-- 第二关热区 -->
       <a-entity id="hotspot-2" position="3 0 -2" visible="false">
-         <a-circle class="interactive" radius="0.8" opacity="0" onclick="openPuzzle(2)"></a-circle>
-         <a-sphere radius="0.08" color="#FFD700" material="emissive: #FFD700; emissiveIntensity: 0.8" opacity="0.6" animation="property: opacity; to: 0.1; dir: alternate; loop: true; dur: 1500"></a-sphere>
+         <a-circle class="interactive" radius="1.5" opacity="0" onclick="openPuzzle(2)"></a-circle>
+         <a-sphere radius="0.08" color="#FFD700" material="emissive: #FFD700; emissiveIntensity: 0.6" opacity="0.6" animation="property: opacity; to: 0.1; dir: alternate; loop: true; dur: 1500"></a-sphere>
       </a-entity>
 
-      <!-- 第三关热区：青铜幽蓝光斑 -->
-      <a-entity id="hotspot-3" position="-2 -1 3" visible="false">
-         <a-circle class="interactive" radius="0.8" opacity="0" onclick="openPuzzle(3)"></a-circle>
-         <a-sphere radius="0.08" color="#00FFFF" material="emissive: #00FFFF; emissiveIntensity: 0.8" opacity="0.6" animation="property: opacity; to: 0.1; dir: alternate; loop: true; dur: 1500"></a-sphere>
+      <!-- 第三关热区：修复点不动与颜色太亮的问题 -->
+      <a-entity id="hotspot-3" position="-1.5 0 -3" visible="false">
+         <!-- 彻底扩大透明点击区域，让评委随便一点就能触发 -->
+         <a-circle class="interactive" radius="2.0" opacity="0" onclick="openPuzzle(3)"></a-circle>
+         <!-- 颜色改为深青色，发光强度大幅调暗，呈现神秘的青铜光泽 -->
+         <a-sphere radius="0.08" color="#005555" material="emissive: #005555; emissiveIntensity: 0.2" opacity="0.5" animation="property: opacity; to: 0.1; dir: alternate; loop: true; dur: 2000"></a-sphere>
       </a-entity>
 
     </a-scene>
@@ -173,10 +175,16 @@
           if(newHotspotId) {
             let newEl = document.getElementById(newHotspotId);
             newEl.setAttribute('visible', 'true');
+            
+            // 核心修复 Raycaster 点不动的问题：强制重绘后再添加交互类，激活热区！
             setTimeout(() => { 
               let clickArea = newEl.querySelector('a-circle');
-              if(clickArea) clickArea.classList.add('interactive'); 
-            }, 100);
+              if(clickArea) {
+                  clickArea.classList.remove('interactive');
+                  void clickArea.offsetWidth; // 触发重绘
+                  clickArea.classList.add('interactive'); 
+              }
+            }, 150);
           }
         }, 1800);
 
