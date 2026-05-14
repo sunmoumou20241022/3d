@@ -2,17 +2,16 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>寻宝洛阳 - 诗词解谜版</title>
+    <title>寻宝洛阳 - 诗词解谜版v2</title>
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <style>
-      /* 全局与古风UI */
       body { font-family: '楷体', 'STKaiti', serif; margin: 0; overflow: hidden; }
       
       /* 顶部提示框 */
       #ui { position: absolute; top: 10%; left: 50%; transform: translateX(-50%); z-index: 10; color: #fff; text-align: center; width: 90%; pointer-events: none; }
-      .msg-box { background: rgba(15, 8, 3, 0.9); padding: 15px 25px; border-radius: 8px; display: none; font-size: 20px; border: 1px solid #d4af37; box-shadow: 0 0 15px #d4af37; text-shadow: 1px 1px 2px black;}
+      .msg-box { background: rgba(15, 8, 3, 0.9); padding: 15px 25px; border-radius: 8px; display: none; font-size: 20px; border: 1px solid #d4af37; box-shadow: 0 0 15px #d4af37;}
       
-      /* ================= 诗词解谜面板 ================= */
+      /* ================= 诗词解谜面板 (更精致的UI) ================= */
       #puzzle-overlay {
         display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         background: rgba(0, 0, 0, 0.85); z-index: 999; 
@@ -23,30 +22,37 @@
         background: #2c1e16; border: 3px solid #d4af37; border-radius: 10px; padding: 30px;
         text-align: center; max-width: 85%; box-shadow: 0 0 50px #000; position: relative;
       }
-      .puzzle-title { color: #d4af37; font-size: 26px; margin-bottom: 15px; font-weight: bold; border-bottom: 1px solid #d4af37; padding-bottom: 10px;}
-      .puzzle-desc { color: #eeddcc; font-size: 18px; margin-bottom: 25px; line-height: 1.6; text-align: left;}
-      .poem-text { font-size: 24px; color: #fff; text-align: center; margin: 15px 0; letter-spacing: 2px;}
-      
-      /* 答题按钮选项 */
+      .puzzle-title { color: #d4af37; font-size: 26px; margin-bottom: 15px; font-weight: bold; border-bottom: 1px solid #d4af37; padding-bottom: 10px; letter-spacing: 2px;}
+      .poem-text { font-size: 24px; color: #fff; text-align: center; margin: 20px 0; letter-spacing: 2px; font-weight: bold; line-height: 1.4;}
+      .poem-desc { color: #eeddcc; font-size: 18px; margin-bottom: 25px; line-height: 1.5;}
+
+      /* 精致的选项按钮 */
       .option-btn {
         display: block; width: 100%; background: linear-gradient(180deg, #4a2e1b 0%, #2a1609 100%);
         border: 1px solid #d4af37; color: #eeddcc; padding: 15px; font-size: 20px; font-family: '楷体';
-        border-radius: 5px; cursor: pointer; margin-bottom: 15px; transition: all 0.2s;
+        border-radius: 5px; cursor: pointer; margin-bottom: 15px; transition: all 0.1s;
       }
       .option-btn:hover { background: #d4af37; color: #000; }
-      .option-btn:active { transform: scale(0.98); }
+      .option-btn:active { transform: scale(0.98); } /* 点击反馈 */
       
       .close-btn { position: absolute; top: 10px; right: 15px; color: #d4af37; font-size: 24px; cursor: pointer; font-family: sans-serif; }
 
-      /* ================= 电影级黑屏转场动画 ================= */
+      /* ================= 电影级黑屏渐变转场过渡 ================= */
       #transition-screen {
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         background: black; z-index: 1000;
         opacity: 0; pointer-events: none; /* 初始透明不可点 */
-        transition: opacity 1.5s ease-in-out; /* 核心渐变动画 */
+        transition: opacity 1.5s ease-in-out; /* 黑屏渐变核心动画 */
         display: flex; flex-direction: column; align-items: center; justify-content: center;
       }
       .transition-text { color: #d4af37; font-size: 24px; letter-spacing: 5px; opacity: 0; transition: opacity 1s ease-in-out; text-shadow: 0 0 10px #d4af37;}
+      
+      /* ================= 增加一个古风方向指示 (取代粗糙几何体引导) ================= */
+      #compass {
+        position: absolute; bottom: 30px; left: 30px; z-index: 10; color: #d4af37;
+        font-size: 16px; width: 60px; height: 60px; border: 1px solid #d4af37; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.4);
+      }
     </style>
   </head>
   <body>
@@ -56,13 +62,15 @@
     <div id="transition-screen">
       <div id="trans-text" class="transition-text">机关轰鸣，天旋地转...</div>
     </div>
+    
+    <div id="compass">寻龙点穴</div>
 
     <div id="puzzle-overlay">
       <div class="puzzle-board">
         <div class="close-btn" onclick="closePuzzle()">✖</div>
         <div class="puzzle-title">龙纹石门机关</div>
-        <div class="puzzle-desc">
-          你在石门上发现了一个龙形凹槽，旁边刻着大唐诗人王昌龄的残句。只有对出暗号，玉牌才能嵌入：
+        <div class="poem-desc">
+          你在暗道尽头的石壁上发现了一个凹槽，旁边刻着大唐诗人王昌龄的诗句。若要激活机关，须对出暗号，将手中的【透雕龙纹玉牌】嵌入：
         </div>
         <div class="poem-text">“洛阳亲友如相问，<br>_____________。”</div>
         
@@ -72,63 +80,64 @@
       </div>
     </div>
 
-    <a-scene>
+    <a-scene renderer="colorManagement: true; antialias: true;">
       <a-sky id="main-sky" src="room1.jpg" rotation="0 -90 0"></a-sky>
 
-      <a-entity camera look-controls>
-        <a-cursor fuse="true" fuse-timeout="1200" raycaster="objects: .interactive" color="#d4af37"></a-cursor>
+      <a-entity camera look-controls="pointerLockEnabled: false;">
+        <a-cursor cursor="rayOrigin: mouse" raycaster="objects: .interactive" color="#fff" radius-inner="0.01" radius-outer="0.02"></a-cursor>
       </a-entity>
       
-      <a-entity id="hotspot" class="interactive" position="-1 -0.5 -4.8" onclick="openPuzzle()">
-         <a-circle radius="0.8" opacity="0"></a-circle>
-         <a-ring radius-inner="0.4" radius-outer="0.43" color="#FFD700" opacity="0.6"
-                 animation="property: scale; to: 1.1 1.1 1.1; dir: alternate; loop: true; dur: 1500"></a-ring>
-      </a-entity>
+      <a-circle id="hotspot" class="interactive" position="-1 -0.5 -4.8" radius="1.5" color="#fff" opacity="0"
+                onclick="openPuzzle()"></a-circle>
 
     </a-scene>
 
     <script>
+      // 交互逻辑
       function openPuzzle() { document.getElementById('puzzle-overlay').style.display = 'flex'; }
       function closePuzzle() { document.getElementById('puzzle-overlay').style.display = 'none'; }
 
-      // 验证答案逻辑
+      // 验证答案与过渡动画逻辑
       function checkAnswer(result) {
         if (result === 'correct') {
           closePuzzle();
-          startCinematicTransition(); // 答对，开启电影级转场！
+          startCinematicTransition(); // 答对，开启电影级黑屏转场！
         } else {
-          showMsg('石门纹丝不动... (提示：选B)');
-          // 可以在这里加一个屏幕震动效果，或者按钮变红
+          showMsg('石壁纹丝不动... (提示：选B)');
         }
       }
 
-      // 核心：电影级转场逻辑
+      // 核心：电影级转场逻辑 (Fade Out -> Switch -> Fade In)
       function startCinematicTransition() {
         const transScreen = document.getElementById('transition-screen');
         const transText = document.getElementById('trans-text');
         
-        // 1. 黑幕降临 (Opacity变1)
+        // 1. 黑幕降临 (渐渐变黑)
         transScreen.style.opacity = '1';
+        transScreen.style.pointerEvents = 'auto'; // 黑屏期间拒绝点击场景
         
-        // 2. 0.5秒后，文字浮现
-        setTimeout(() => { transText.style.opacity = '1'; }, 500);
+        // 2. 0.8秒后，浮现通关文字
+        setTimeout(() => { transText.style.opacity = '1'; }, 800);
 
-        // 3. 在黑屏遮挡的情况下(1.5秒时)，偷偷把3D场景换成第二关！
+        // 3. 在完全黑屏的情况下 (1.8秒时)，偷偷把3D背景图换掉！
         setTimeout(() => {
-          document.getElementById('main-sky').setAttribute('src', 'room2.jpg'); // 切换到藏经阁
-          document.getElementById('hotspot').setAttribute('visible', 'false'); // 隐藏第一关机关
+          document.getElementById('main-sky').setAttribute('src', 'room2.jpg'); // 切换背景
+          document.getElementById('hotspot').setAttribute('visible', 'false'); // 隐藏第一关机关点击区
           document.getElementById('hotspot').classList.remove('interactive');
-        }, 1500);
+        }, 1800);
 
-        // 4. 3秒后，黑幕渐渐散去 (Opacity变0)
+        // 4. 4秒后，黑幕渐渐散去，露出新关卡
         setTimeout(() => {
           transText.style.opacity = '0';
           transScreen.style.opacity = '0';
-          
-          // 散去后提示通关
-          setTimeout(() => { showMsg('你成功进入了【胡商藏经阁】'); }, 1500);
-        }, 3500);
+          transScreen.style.pointerEvents = 'none'; // 恢复点击
+
+          // 散去后弹出第二关通关消息
+          setTimeout(() => { showMsg('轰隆隆...\n石壁裂开，你进入了【胡商藏经阁】'); }, 1500);
+        }, 4000);
       }
 
-      function showMsg(text) { 
-        const box = document.getElementById
+      function showMsg(text) { const box = document.getElementById('msg'); box.innerText = text; box.style.display = 'block'; setTimeout(() => { box.style.display = 'none'; }, 3000); }
+    </script>
+  </body>
+</html>
