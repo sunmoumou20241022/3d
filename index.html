@@ -102,10 +102,11 @@
     </a-scene>
 
     <script>
+     // ================= 全局系统状态与音频管理器 =================
       let currentLevel = 1;
       let audioUnlocked = false;
 
-      // 核心替换：图一和图二恢复使用 bgm1.mp3
+      // 核心资产
       const audioBgm1 = new Audio('bgm1.mp3'); audioBgm1.loop = true; audioBgm1.volume = 0.5;
       const audioBgm2 = new Audio('bgm2.mp3'); audioBgm2.loop = true; audioBgm2.volume = 0.5; 
       const audioBgm3 = new Audio('bgm3.mp3'); audioBgm3.loop = true; audioBgm3.volume = 0.5;
@@ -119,7 +120,8 @@
 
       function unlockAudio() {
           if (audioUnlocked) return;
-          const allAudioObjects = [audioBgm1, audioBgm2, audioBgm3, sfxUi, sfxDoor, sfxPaper, sfxMetal];
+          // 【修复点 1】：剔除 sfxDoor，防止异步 pause() 切断马上要播放的开门声
+          const allAudioObjects = [audioBgm1, audioBgm2, audioBgm3, sfxUi, sfxPaper, sfxMetal];
           allAudioObjects.forEach(audio => {
               audio.volume = 0; 
               let playPromise = audio.play();
@@ -140,15 +142,15 @@
           sfxObj.play().catch(e => console.log('SFX blocked:', e));
       }
 
+      // 开始界面
       document.getElementById('start-btn').addEventListener('click', () => {
         unlockAudio();
         document.getElementById('start-screen').style.display = 'none';
         document.getElementById('transition-screen').style.opacity = '0';
         
-        // 核心变异点：点击首屏按钮时触发开门音效
+        // 现在的开门声不会再被切断了
         playSFX(sfxDoor);
         
-        // 延迟播放图一的 bgm1.mp3，错开开门声
         setTimeout(() => {
             currentBgm = audioBgm1; 
             currentBgm.play().catch(e => console.log('BGM1 blocked:', e)); 
@@ -172,6 +174,7 @@
         }, 100);
       }
 
+      // UI 交互
       function openPuzzle(num) { 
         if (num !== currentLevel) return;
         playSFX(sfxUi); 
@@ -195,13 +198,14 @@
           document.getElementById('hotspot-egg').classList.remove('interactive');
       }
 
+      // 关卡校验逻辑
       function checkAnswer1(result) {
         playSFX(sfxUi);
         if (result === 'correct') {
           closePuzzle(1);
           closeEasterEgg();
-          // 图一到图二：BGM 保持 bgm1.mp3 不变，传入 null。取消重复的开门音效，防止与首次点击冲突。
-          startTransition('机关轰鸣，天旋地转...', 'room2.jpg', 'hotspot-1', 'hotspot-2', '轰隆隆...\n石壁裂开，你进入了【胡商藏经阁】', 2, null, null);
+          // 【修复点 2】：把最后参数的 null 改为 sfxDoor，恢复“机关轰鸣”转场时的音效
+          startTransition('机关轰鸣，天旋地转...', 'room2.jpg', 'hotspot-1', 'hotspot-2', '轰隆隆...\n石壁裂开，你进入了【胡商藏经阁】', 2, null, sfxDoor);
         } else { showMsg('石壁纹丝不动... (提示：选B)'); }
       }
 
@@ -209,7 +213,6 @@
         playSFX(sfxUi);
         if (result === 'correct') {
           closePuzzle(2);
-          // 图二到图三：切换到 bgm2.mp3，播放丝帛燃烧声
           startTransition('丝帛燃烧，书架缓缓移开...', 'room3.jpg', 'hotspot-2', 'hotspot-3', '你发现了深渊底部的【青铜机关室】！', 3, audioBgm2, sfxPaper);
         } else { showMsg('口令错误，密卷上的文字变得模糊... (提示：选B)'); }
       }
@@ -218,11 +221,11 @@
         playSFX(sfxUi);
         if (result === 'correct') {
           closePuzzle(3);
-          // 图三到图四：切换到 bgm3.mp3，播放金属齿轮声
           startTransition('青铜巨门缓缓开启，万丈佛光倾泻而出...', 'room4.jpg', 'hotspot-3', null, '震撼！你抵达了终极宝藏：【大唐龙门佛窟】！\n(演示大结局)', 4, audioBgm3, sfxMetal);
         } else { showMsg('齿轮发出刺耳的摩擦声... (提示：选B)'); }
       }
 
+      // 核心转场函数
       function startTransition(transTextMsg, nextImageId, oldHotspotId, newHotspotId, successMsg, nextLevelNum, nextBgmTarget, transSfx) {
         const transScreen = document.getElementById('transition-screen');
         const transText = document.getElementById('trans-text');
