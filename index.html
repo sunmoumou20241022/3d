@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>寻宝洛阳 - 终极完全体</title>
+    <title>寻宝洛阳 - 轮回完全体</title>
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <style>
       body { font-family: '楷体', 'STKaiti', serif; margin: 0; overflow: hidden; background: #000; }
@@ -90,7 +90,7 @@
       </div>
     </div>
     
-    <!-- 大结局史诗级奖励 UI -->
+    <!-- 史诗级奖励 UI，默认隐藏 -->
     <div id="finale-screen" class="puzzle-overlay" style="background: rgba(10, 5, 0, 0.9);">
       <div class="puzzle-board" style="background: transparent; border: none; box-shadow: none;">
         <div class="death-main" style="color: #FFD700; text-shadow: 0 0 30px #FFD700, 0 0 10px #FFF;">寻宝圆满，名留青史</div>
@@ -152,6 +152,11 @@
          <a-circle class="interactive" radius="1.2" opacity="0" onclick="openPuzzle(3)"></a-circle>
          <a-sphere radius="0.08" color="#005555" material="emissive: #005555; emissiveIntensity: 0.3" opacity="0.5" animation="property: opacity; to: 0.1; dir: alternate; loop: true; dur: 2000"></a-sphere>
       </a-entity>
+
+      <!-- 终局大佛触发器：进入第四关时激活，点击后弹出史诗面板 -->
+      <a-entity id="hotspot-finale" position="0 0 -5" visible="false">
+         <a-circle class="interactive" radius="3" opacity="0" onclick="triggerFinale()"></a-circle>
+      </a-entity>
     </a-scene>
 
     <script>
@@ -159,7 +164,6 @@
       let currentBgmId = null;
       let audioUnlocked = false;
 
-      // ================= 历史秘闻数据字典 =================
       const tangSecrets = {
           1: { 
               title: "雕版印刷术的黎明与文明的火种", 
@@ -178,7 +182,6 @@
           }
       };
 
-      // ================= 凝视彩蛋与 URI 编码防线 =================
       let gazeTimer = null;
       const loaderUI = document.getElementById('gaze-loader');
 
@@ -216,7 +219,6 @@
           document.getElementById('secret-panel-overlay').style.display = 'none';
       }
 
-      // ================= 基础交互、音频与状态机 =================
       function playAudioSafe(id, volume = 0.5) {
           let el = document.getElementById(id);
           if(el) { el.currentTime = 0; el.volume = volume; let p = el.play(); if(p !== undefined) p.catch(e => console.log('Play blocked:', e)); }
@@ -241,6 +243,11 @@
           ids.forEach(id => { let el = document.getElementById(id); if(el) el.pause(); });
           document.querySelectorAll('.puzzle-overlay').forEach(el => el.style.display = 'none');
           document.getElementById('game-over-screen').style.display = 'flex';
+      }
+      
+      function triggerFinale() {
+          playAudioSafe('audio-ui');
+          document.getElementById('finale-screen').style.display = 'flex';
       }
 
       document.getElementById('start-btn').addEventListener('click', () => {
@@ -275,7 +282,7 @@
       function checkAnswer3(result) {
         if (result === 'correct') {
           playAudioSafe('audio-ui'); closePuzzle(3);
-          startTransition('青铜巨门缓缓开启，万丈佛光倾泻而出...', 'room4.jpg', 'hotspot-3', null, '震撼！你抵达了终极宝藏：【大唐龙门佛窟】！\n(演示大结局)', 4, 'audio-bgm3', 'audio-metal');
+          startTransition('青铜巨门缓缓开启，万丈佛光倾泻而出...', 'room4.jpg', 'hotspot-3', null, '震撼！触摸大佛，获取终极奖励！', 4, 'audio-bgm3', 'audio-metal');
         } else { triggerGameOver(); }
       }
 
@@ -312,22 +319,28 @@
                   sphere.setAttribute('radius', '0.02'); 
               });
               
-              setTimeout(() => {
-                  playAudioSafe('audio-ui'); 
-                  document.getElementById('finale-screen').style.display = 'flex';
-              }, 6000);
+              // 激活终局触发器，需要点击大佛
+              let finaleHotspot = document.getElementById('hotspot-finale');
+              finaleHotspot.setAttribute('visible', 'true');
+              setTimeout(() => { 
+                  let clickArea = finaleHotspot.querySelector('a-circle');
+                  if(clickArea) clickArea.classList.add('interactive'); 
+              }, 150);
           }
 
           if(oldHotspotId) {
             let oldEl = document.getElementById(oldHotspotId);
-            oldEl.setAttribute('visible', 'false'); oldEl.setAttribute('position', '0 -1000 0'); oldEl.classList.remove('interactive'); 
+            oldEl.setAttribute('visible', 'false'); 
+            // 核心修复：不能修改 position，否则重置时坐标不对。直接隐藏并移除交互即可。
+            let clickArea = oldEl.tagName === 'A-CIRCLE' ? oldEl : oldEl.querySelector('a-circle');
+            if (clickArea) clickArea.classList.remove('interactive'); 
           }
 
           if(newHotspotId) {
             let newEl = document.getElementById(newHotspotId);
             newEl.setAttribute('visible', 'true');
             setTimeout(() => { 
-              let clickArea = newEl.querySelector('a-circle');
+              let clickArea = newEl.tagName === 'A-CIRCLE' ? newEl : newEl.querySelector('a-circle');
               if(clickArea) { clickArea.classList.remove('interactive'); void clickArea.offsetWidth; clickArea.classList.add('interactive'); }
             }, 150);
           }
@@ -347,11 +360,7 @@
         }, 4000);
       }
 
-      function showMsg(text) { 
-          const box = document.getElementById('msg'); box.innerText = text; box.style.display = 'block'; 
-          if(currentLevel !== 4) setTimeout(() => { box.style.display = 'none'; }, 3500); 
-      }
-
+      // ================= 状态机全面安全重置逻辑 =================
       function restartGame() {
           playAudioSafe('audio-ui');
           const ids = ['audio-bgm1', 'audio-bgm2', 'audio-bgm3', 'audio-ui', 'audio-door', 'audio-paper', 'audio-metal'];
@@ -369,14 +378,28 @@
           dynLight.setAttribute('visible', 'true'); dynLight.setAttribute('color', '#FFAA00');
           document.getElementById('dust-particles').setAttribute('visible', 'false');
 
-          document.getElementById('hotspot-1').setAttribute('visible', 'true');
-          document.getElementById('hotspot-1').setAttribute('position', '-1 -0.5 -4.8');
-          document.getElementById('hotspot-1').classList.add('interactive');
+          // 【核心修复】：彻底重置所有热区的状态，防止第二关卡死
+          let h1 = document.getElementById('hotspot-1');
+          h1.setAttribute('visible', 'true');
+          h1.classList.add('interactive');
 
           ['hotspot-2', 'hotspot-3'].forEach(id => {
-              let el = document.getElementById(id); el.setAttribute('visible', 'false');
-              let clickArea = el.querySelector('a-circle'); if (clickArea) clickArea.classList.remove('interactive');
+              let el = document.getElementById(id); 
+              el.setAttribute('visible', 'false');
+              let clickArea = el.querySelector('a-circle'); 
+              if (clickArea) clickArea.classList.remove('interactive');
           });
+          
+          let finaleHotspot = document.getElementById('hotspot-finale');
+          finaleHotspot.setAttribute('visible', 'false');
+          let fClickArea = finaleHotspot.querySelector('a-circle');
+          if (fClickArea) fClickArea.classList.remove('interactive');
+
+          // 重置 UI 提示框样式
+          let msgBox = document.getElementById('msg');
+          msgBox.style.background = 'rgba(15, 8, 3, 0.9)';
+          msgBox.style.color = '#fff';
+          msgBox.style.display = 'none';
 
           document.getElementById('start-screen').style.display = 'flex';
       }
