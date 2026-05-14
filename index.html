@@ -100,63 +100,75 @@
 
     <script>
       // UI 开关控制
-      function openPuzzle(num) { document.getElementById('puzzle-' + num).style.display = 'flex'; }
-      function closePuzzle(num) { document.getElementById('puzzle-' + num).style.display = 'none'; }
+function openPuzzle(num) { document.getElementById('puzzle-' + num).style.display = 'flex'; }
+function closePuzzle(num) { document.getElementById('puzzle-' + num).style.display = 'none'; }
 
-      // ================= 第一关逻辑 =================
-      function checkAnswer1(result) {
-        if (result === 'correct') {
-          closePuzzle(1);
-          // 转场参数：文案, 目标图片, 隐藏旧热区, 显示新热区, 成功提示
-          startTransition('机关轰鸣，天旋地转...', 'room2.jpg', 'hotspot-1', 'hotspot-2', '轰隆隆...\n石壁裂开，你进入了【胡商藏经阁】');
-        } else { showMsg('石壁纹丝不动... (提示：选B)'); }
-      }
+// ================= 第一关逻辑 =================
+function checkAnswer1(result) {
+  if (result === 'correct') {
+    closePuzzle(1);
+    // 转场参数：文案, 目标图片, 隐藏旧热区, 显示新热区, 成功提示
+    startTransition('机关轰鸣，天旋地转...', 'room2.jpg', 'hotspot-1', 'hotspot-2', '轰隆隆...\n石壁裂开，你进入了【胡商藏经阁】');
+  } else { showMsg('石壁纹丝不动... (提示：选B)'); }
+}
 
-      // ================= 第二关逻辑 =================
-      function checkAnswer2(result) {
-        if (result === 'correct') {
-          closePuzzle(2);
-          // 转场到第三关 (青铜机关室)
-          startTransition('丝帛燃烧，书架缓缓移开...', 'room3.jpg', 'hotspot-2', null, '你发现了深渊底部的【青铜机关室】！');
-        } else { showMsg('口令错误，密卷上的文字变得模糊... (提示：选B)'); }
-      }
+// ================= 第二关逻辑 =================
+function checkAnswer2(result) {
+  if (result === 'correct') {
+    closePuzzle(2);
+    // 转场到第三关 (青铜机关室)
+    startTransition('丝帛燃烧，书架缓缓移开...', 'room3.jpg', 'hotspot-2', null, '你发现了深渊底部的【青铜机关室】！');
+  } else { showMsg('口令错误，密卷上的文字变得模糊... (提示：选B)'); }
+}
 
-      // ================= 核心封装：通用电影级转场 =================
-      function startTransition(transTextMsg, nextImageId, oldHotspotId, newHotspotId, successMsg) {
-        const transScreen = document.getElementById('transition-screen');
-        const transText = document.getElementById('trans-text');
-        
-        transText.innerText = transTextMsg; // 设置转场文字
-        transScreen.style.opacity = '1';
-        transScreen.style.pointerEvents = 'auto'; 
-        
-        setTimeout(() => { transText.style.opacity = '1'; }, 800);
+// ================= 核心封装：通用电影级转场 (彻底修复“幽灵热区”Bug) =================
+function startTransition(transTextMsg, nextImageId, oldHotspotId, newHotspotId, successMsg) {
+  const transScreen = document.getElementById('transition-screen');
+  const transText = document.getElementById('trans-text');
+  
+  transText.innerText = transTextMsg; // 设置转场文字
+  transScreen.style.opacity = '1';
+  transScreen.style.pointerEvents = 'auto'; 
+  
+  setTimeout(() => { transText.style.opacity = '1'; }, 800);
 
-        setTimeout(() => {
-          document.getElementById('main-sky').setAttribute('src', nextImageId); // 切换背景
-          
-          // 关掉旧热区
-          if(oldHotspotId) {
-            document.getElementById(oldHotspotId).setAttribute('visible', 'false');
-            document.getElementById(oldHotspotId).querySelector('.interactive').classList.remove('interactive');
-          }
-          // 激活新热区
-          if(newHotspotId) {
-            document.getElementById(newHotspotId).setAttribute('visible', 'true');
-            // 注意：A-Frame 元素显示后，需要稍微延迟确保类名生效
-            setTimeout(() => { document.getElementById(newHotspotId).querySelector('a-circle').classList.add('interactive'); }, 100);
-          }
-        }, 1800);
+  setTimeout(() => {
+    // 1. 切换 3D 背景图
+    document.getElementById('main-sky').setAttribute('src', nextImageId); 
+    
+    // 2. 【核心修复】彻底超度旧热区：物理发配到十万八千里外！
+    if(oldHotspotId) {
+      let oldEl = document.getElementById(oldHotspotId);
+      oldEl.setAttribute('visible', 'false');
+      oldEl.setAttribute('position', '0 -1000 0'); // 物理隔离，直接丢到地底
+      oldEl.classList.remove('interactive'); // 剥离本体的点击类
+      
+      // 如果它内部有子元素带交互，也一并剥离
+      let child = oldEl.querySelector('.interactive');
+      if(child) child.classList.remove('interactive');
+    }
 
-        setTimeout(() => {
-          transText.style.opacity = '0';
-          transScreen.style.opacity = '0';
-          transScreen.style.pointerEvents = 'none'; 
-          setTimeout(() => { showMsg(successMsg); }, 1500);
-        }, 4000);
-      }
+    // 3. 激活新关卡的热区
+    if(newHotspotId) {
+      let newEl = document.getElementById(newHotspotId);
+      newEl.setAttribute('visible', 'true');
+      // 给一点延迟，确保 A-Frame 渲染完新元素后再加上可点击属性
+      setTimeout(() => { 
+        let clickArea = newEl.querySelector('a-circle');
+        if(clickArea) clickArea.classList.add('interactive'); 
+      }, 100);
+    }
+  }, 1800);
 
-      function showMsg(text) { const box = document.getElementById('msg'); box.innerText = text; box.style.display = 'block'; setTimeout(() => { box.style.display = 'none'; }, 3500); }
+  setTimeout(() => {
+    transText.style.opacity = '0';
+    transScreen.style.opacity = '0';
+    transScreen.style.pointerEvents = 'none'; 
+    setTimeout(() => { showMsg(successMsg); }, 1500);
+  }, 4000);
+}
+
+function showMsg(text) { const box = document.getElementById('msg'); box.innerText = text; box.style.display = 'block'; setTimeout(() => { box.style.display = 'none'; }, 3500); }
     </script>
   </body>
 </html>
