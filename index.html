@@ -112,25 +112,54 @@
       const sfxClick = new Audio('https://cdn.pixabay.com/download/audio/2022/03/15/audio_78f1082522.mp3');
       const sfxRumble = new Audio('https://cdn.pixabay.com/download/audio/2022/01/18/audio_845db826b5.mp3');
 
-      let currentBgm = audioBgm1;
+      let currentBgm = null;
+
+      // 【核心载荷】：静默解锁浏览器音频沙箱
+      function unlockAudioEngine() {
+          const allAudioObjects = [audioBgm1, audioBgm2, audioBgm3, sfxClick, sfxRumble];
+          allAudioObjects.forEach(audio => {
+              audio.volume = 0; // 静音解锁，防止爆音
+              let playPromise = audio.play();
+              if (playPromise !== undefined) {
+                  playPromise.then(_ => {
+                      audio.pause();
+                      audio.currentTime = 0;
+                      audio.volume = 0.5; // 恢复正常音量
+                  }).catch(error => {
+                      console.log('Audio unlock pending user interaction:', error);
+                  });
+              }
+          });
+      }
 
       function startGame() {
         document.getElementById('start-btn').style.display = 'none';
         document.getElementById('transition-screen').style.opacity = '0';
-        currentBgm.play().catch(e => console.log('Autoplay blocked')); 
+        
+        // 1. 在用户首次真实点击时，瞬间解锁所有音频文件
+        unlockAudioEngine();
+
+        // 2. 延迟一点点播放第一关主BGM，确保解锁完成
+        setTimeout(() => {
+            currentBgm = audioBgm1;
+            currentBgm.play().catch(e => console.log('BGM1 blocked:', e)); 
+        }, 100);
       }
 
       function switchBGM(nextBgm) {
         if (!nextBgm || currentBgm === nextBgm) return;
         let vol = 0.5;
         let fadeOut = setInterval(() => {
-            if (vol > 0.05) { vol -= 0.05; currentBgm.volume = vol; } 
-            else {
+            if (vol > 0.05) { 
+                vol -= 0.05; 
+                if(currentBgm) currentBgm.volume = vol; 
+            } else {
                 clearInterval(fadeOut);
-                currentBgm.pause();
+                if(currentBgm) currentBgm.pause();
                 currentBgm = nextBgm;
                 currentBgm.volume = 0.5;
-                currentBgm.play();
+                // 由于已经在 startGame 中解锁，这里的延迟播放将不再被浏览器拦截
+                currentBgm.play().catch(e => console.log('Crossfade blocked:', e));
             }
         }, 100);
       }
