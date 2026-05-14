@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>寻宝洛阳 - 终极完整版</title>
+    <title>寻宝洛阳 - 终极闭环版</title>
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <style>
       body { font-family: '楷体', 'STKaiti', serif; margin: 0; overflow: hidden; }
@@ -106,29 +106,25 @@
         <a-cursor cursor="rayOrigin: mouse" raycaster="objects: .interactive" color="#fff" radius-inner="0.01" radius-outer="0.02"></a-cursor>
       </a-entity>
       
-      <!-- 第一关热区 -->
+      <!-- 热区设置 -->
       <a-circle id="hotspot-1" class="interactive" position="-1 -0.5 -4.8" radius="1.5" opacity="0" onclick="openPuzzle(1)"></a-circle>
 
-      <!-- 第二关热区 -->
       <a-entity id="hotspot-2" position="3 0 -2" visible="false">
          <a-circle class="interactive" radius="1.5" opacity="0" onclick="openPuzzle(2)"></a-circle>
          <a-sphere radius="0.08" color="#FFD700" material="emissive: #FFD700; emissiveIntensity: 0.6" opacity="0.6" animation="property: opacity; to: 0.1; dir: alternate; loop: true; dur: 1500"></a-sphere>
       </a-entity>
 
-      <!-- 第三关热区：缩小透明热区避免事件穿透，降低发光刺眼度 -->
       <a-entity id="hotspot-3" position="-1.5 0 -3" visible="false">
          <a-circle class="interactive" radius="1.2" opacity="0" onclick="openPuzzle(3)"></a-circle>
          <a-sphere radius="0.08" color="#005555" material="emissive: #005555; emissiveIntensity: 0.3" opacity="0.5" animation="property: opacity; to: 0.1; dir: alternate; loop: true; dur: 2000"></a-sphere>
       </a-entity>
-
     </a-scene>
 
     <script>
-      // 引入全局状态锁，防御射线事件穿透导致跳关
+      // 状态锁：确保不会发生射线穿透导致的跳关
       let currentLevel = 1;
 
       function openPuzzle(num) { 
-        // 状态锁校验，拒绝越权调用
         if (num !== currentLevel) return;
         document.getElementById('puzzle-' + num).style.display = 'flex'; 
       }
@@ -151,12 +147,11 @@
       function checkAnswer3(result) {
         if (result === 'correct') {
           closePuzzle(3);
-          // 终极转场：不强行加载缺失的 room4.jpg，通过 null 参数原地保留，渲染大结局提示
-          startTransition('青铜巨门缓缓开启，佛光普照...', null, 'hotspot-3', null, '震撼！你抵达了终极宝藏：【终极佛窟】！\n(演示大结局)', 4);
+          // 最终转场：加载 room4.jpg，移除所有交互，展示结局
+          startTransition('青铜巨门缓缓开启，万丈佛光倾泻而出...', 'room4.jpg', 'hotspot-3', null, '震撼！你抵达了终极宝藏：【大唐龙门佛窟】！\n(演示大结局)', 4);
         } else { showMsg('齿轮发出刺耳的摩擦声... (提示：选B)'); }
       }
 
-      // 转场状态机：更新 nextLevelNum
       function startTransition(transTextMsg, nextImageId, oldHotspotId, newHotspotId, successMsg, nextLevelNum) {
         const transScreen = document.getElementById('transition-screen');
         const transText = document.getElementById('trans-text');
@@ -165,8 +160,7 @@
         transScreen.style.opacity = '1';
         transScreen.style.pointerEvents = 'auto'; 
         
-        // 挂载锁定态，转移控制权
-        currentLevel = -1; 
+        currentLevel = -1; // 锁定状态
 
         setTimeout(() => { transText.style.opacity = '1'; }, 800);
 
@@ -180,12 +174,13 @@
             oldEl.setAttribute('visible', 'false');
             oldEl.setAttribute('position', '0 -1000 0'); 
             oldEl.classList.remove('interactive'); 
+            let child = oldEl.querySelector('.interactive');
+            if(child) child.classList.remove('interactive');
           }
 
           if(newHotspotId) {
             let newEl = document.getElementById(newHotspotId);
             newEl.setAttribute('visible', 'true');
-            // 防御 Ghost Click: 等待渲染与事件流清空后，重构相交对象列表
             setTimeout(() => { 
               let clickArea = newEl.querySelector('a-circle');
               if(clickArea) {
@@ -202,7 +197,6 @@
           transScreen.style.opacity = '0';
           transScreen.style.pointerEvents = 'none'; 
           
-          // 释放状态机到目标级
           currentLevel = nextLevelNum;
           
           if (currentLevel === 4) {
