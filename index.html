@@ -18,7 +18,6 @@
       .option-btn:active { transform: scale(0.98); }
       .close-btn { position: absolute; top: 10px; right: 15px; font-size: 24px; cursor: pointer; }
 
-      /* 面板样式 */
       #board-1 { background: #2c1e16; border: 3px solid #d4af37; box-shadow: 0 0 50px #000; }
       #board-1 .puzzle-title, #board-1 .close-btn { color: #d4af37; border-color: #d4af37; }
       #board-1 .poem-desc { color: #eeddcc; } #board-1 .poem-text { color: #fff; }
@@ -60,12 +59,10 @@
     <div id="transition-screen"><div id="trans-text" class="transition-text"></div></div>
     <div id="compass">寻龙点穴</div>
 
-    <!-- 题目弹窗 -->
     <div id="puzzle-1" class="puzzle-overlay"><div id="board-1" class="puzzle-board"><div class="close-btn" onclick="closePuzzle(1)">✖</div><div class="puzzle-title">龙纹石门机关</div><div class="poem-desc">暗道尽头的凹槽，须对出暗号：</div><div class="poem-text">“洛阳亲友如相问，<br>_____________。”</div><button class="option-btn" onclick="checkAnswer1('wrong')">A. 不及汪伦送我情</button><button class="option-btn" onclick="checkAnswer1('correct')">B. 一片冰心在玉壶</button><button class="option-btn" onclick="checkAnswer1('wrong')">C. 孤帆远影碧空尽</button><button class="option-btn" onclick="checkAnswer1('wrong')">D. 天涯若比邻</button></div></div>
     <div id="puzzle-2" class="puzzle-overlay"><div id="board-2" class="puzzle-board"><div class="close-btn" onclick="closePuzzle(2)">✖</div><div class="puzzle-title">西域商路密卷</div><div class="poem-desc">唯有对出口令方可开启密道：</div><div class="poem-text">“劝君更尽一杯酒，<br>西出____无故人。”</div><button class="option-btn" onclick="checkAnswer2('wrong')">A. 雁门</button><button class="option-btn" onclick="checkAnswer2('correct')">B. 阳关</button><button class="option-btn" onclick="checkAnswer2('wrong')">C. 玉门</button><button class="option-btn" onclick="checkAnswer2('wrong')">D. 楼兰</button></div></div>
     <div id="puzzle-3" class="puzzle-overlay"><div id="board-3" class="puzzle-board"><div class="close-btn" onclick="closePuzzle(3)">✖</div><div class="puzzle-title">青铜八卦锁</div><div class="poem-desc">破解天干之谜以倒转齿轮：</div><div class="poem-text">“天干地支中，‘甲’对应的五行是？”</div><button class="option-btn" onclick="checkAnswer3('wrong')">A. 金</button><button class="option-btn" onclick="checkAnswer3('correct')">B. 木</button><button class="option-btn" onclick="checkAnswer3('wrong')">C. 水</button><button class="option-btn" onclick="checkAnswer3('wrong')">D. 火</button></div></div>
 
-    <!-- 彩蛋 -->
     <div id="easter-egg-panel" class="puzzle-overlay">
       <div id="easter-egg-ui" class="puzzle-board">
         <div class="close-btn" onclick="closeEasterEgg()">✖</div>
@@ -74,7 +71,6 @@
       </div>
     </div>
 
-    <!-- 3D 场景 -->
     <a-scene renderer="colorManagement: true; antialias: true;">
       <a-sky id="main-sky" src="room1.jpg" rotation="0 -90 0"></a-sky>
 
@@ -82,10 +78,8 @@
         <a-cursor cursor="rayOrigin: mouse" raycaster="objects: .interactive" color="#fff" radius-inner="0.01" radius-outer="0.02"></a-cursor>
       </a-entity>
 
-      <!-- 动态光影 -->
       <a-light id="dynamic-light" type="point" color="#FFAA00" position="0 1 -2" intensity="0.6" animation="property: intensity; to: 0.3; dir: alternate; loop: true; dur: 800"></a-light>
       
-      <!-- 微尘粒子 -->
       <a-entity id="dust-particles" visible="false">
          <a-sphere radius="0.005" color="#FFF" opacity="0.15" position="-1.5 1 -2" animation__pos="property: position; to: -1 2.5 -1.5; dir: alternate; loop: true; dur: 12000; easing: linear" animation__fade="property: opacity; to: 0.05; dir: alternate; loop: true; dur: 3000"></a-sphere>
          <a-sphere radius="0.008" color="#EEDDCC" opacity="0.1" position="1.5 1.5 -2.5" animation__pos="property: position; to: 0.5 1.8 -2; dir: alternate; loop: true; dur: 15000; easing: easeInOutSine" animation__fade="property: opacity; to: 0.2; dir: alternate; loop: true; dur: 4500"></a-sphere>
@@ -93,7 +87,6 @@
          <a-sphere radius="0.01" color="#FFD700" opacity="0.08" position="0 1.2 -1.5" animation__pos="property: position; to: 0 1.5 -1.5; dir: alternate; loop: true; dur: 8000; easing: easeInOutSine"></a-sphere>
       </a-entity>
 
-      <!-- 热区 -->
       <a-circle id="hotspot-1" class="interactive" position="-1 -0.5 -4.8" radius="1.5" opacity="0" onclick="openPuzzle(1)"></a-circle>
       <a-sphere id="hotspot-egg" class="interactive" radius="0.05" position="-2 -1.5 -2" color="#447744" material="emissive: #447744; emissiveIntensity: 0.4" animation="property: opacity; to: 0.2; dir: alternate; loop: true; dur: 1000" onclick="openEasterEgg()"></a-sphere>
 
@@ -109,13 +102,12 @@
     </a-scene>
 
     <script>
-      // ================= 全局系统状态与音频管理器 =================
       let currentLevel = 1;
       let audioUnlocked = false;
 
-      // 核心替换：加载你本地下载好的全套 MP3 资产
-      const audioBgm1 = new Audio('cave.mp3'); audioBgm1.loop = true; audioBgm1.volume = 0.5;
-      const audioBgm2 = new Audio('bgm2.mp3'); audioBgm2.loop = true; audioBgm2.volume = 0.5; // 如果你只有cave.mp3，可将此处也换成cave.mp3
+      // 核心替换：图一和图二恢复使用 bgm1.mp3
+      const audioBgm1 = new Audio('bgm1.mp3'); audioBgm1.loop = true; audioBgm1.volume = 0.5;
+      const audioBgm2 = new Audio('bgm2.mp3'); audioBgm2.loop = true; audioBgm2.volume = 0.5; 
       const audioBgm3 = new Audio('bgm3.mp3'); audioBgm3.loop = true; audioBgm3.volume = 0.5;
       
       const sfxUi = new Audio('ui.mp3');
@@ -125,7 +117,6 @@
 
       let currentBgm = null;
 
-      // 静默解锁所有实例化音频
       function unlockAudio() {
           if (audioUnlocked) return;
           const allAudioObjects = [audioBgm1, audioBgm2, audioBgm3, sfxUi, sfxDoor, sfxPaper, sfxMetal];
@@ -143,8 +134,8 @@
           audioUnlocked = true;
       }
 
-      // 细粒度播放触发器
       function playSFX(sfxObj) {
+          if(!sfxObj) return;
           sfxObj.currentTime = 0; 
           sfxObj.play().catch(e => console.log('SFX blocked:', e));
       }
@@ -154,10 +145,14 @@
         document.getElementById('start-screen').style.display = 'none';
         document.getElementById('transition-screen').style.opacity = '0';
         
+        // 核心变异点：点击首屏按钮时触发开门音效
+        playSFX(sfxDoor);
+        
+        // 延迟播放图一的 bgm1.mp3，错开开门声
         setTimeout(() => {
-            currentBgm = audioBgm1; // 启动古墓底噪 (cave.mp3)
+            currentBgm = audioBgm1; 
             currentBgm.play().catch(e => console.log('BGM1 blocked:', e)); 
-        }, 100);
+        }, 1500);
       });
 
       function switchBGM(nextBgm) {
@@ -177,10 +172,9 @@
         }, 100);
       }
 
-      // ================= 业务交互逻辑 =================
       function openPuzzle(num) { 
         if (num !== currentLevel) return;
-        playSFX(sfxUi); // 触发 UI 点击声
+        playSFX(sfxUi); 
         document.getElementById('puzzle-' + num).style.display = 'flex'; 
       }
       function closePuzzle(num) { 
@@ -206,8 +200,8 @@
         if (result === 'correct') {
           closePuzzle(1);
           closeEasterEgg();
-          // 第一关通关：播放石门开启声 (door.mp3)
-          startTransition('机关轰鸣，天旋地转...', 'room2.jpg', 'hotspot-1', 'hotspot-2', '轰隆隆...\n石壁裂开，你进入了【胡商藏经阁】', 2, null, sfxDoor);
+          // 图一到图二：BGM 保持 bgm1.mp3 不变，传入 null。取消重复的开门音效，防止与首次点击冲突。
+          startTransition('机关轰鸣，天旋地转...', 'room2.jpg', 'hotspot-1', 'hotspot-2', '轰隆隆...\n石壁裂开，你进入了【胡商藏经阁】', 2, null, null);
         } else { showMsg('石壁纹丝不动... (提示：选B)'); }
       }
 
@@ -215,7 +209,7 @@
         playSFX(sfxUi);
         if (result === 'correct') {
           closePuzzle(2);
-          // 第二关通关：播放丝帛燃烧声 (paper.mp3)
+          // 图二到图三：切换到 bgm2.mp3，播放丝帛燃烧声
           startTransition('丝帛燃烧，书架缓缓移开...', 'room3.jpg', 'hotspot-2', 'hotspot-3', '你发现了深渊底部的【青铜机关室】！', 3, audioBgm2, sfxPaper);
         } else { showMsg('口令错误，密卷上的文字变得模糊... (提示：选B)'); }
       }
@@ -224,12 +218,11 @@
         playSFX(sfxUi);
         if (result === 'correct') {
           closePuzzle(3);
-          // 第三关通关：播放齿轮金属声 (metal.mp3)
+          // 图三到图四：切换到 bgm3.mp3，播放金属齿轮声
           startTransition('青铜巨门缓缓开启，万丈佛光倾泻而出...', 'room4.jpg', 'hotspot-3', null, '震撼！你抵达了终极宝藏：【大唐龙门佛窟】！\n(演示大结局)', 4, audioBgm3, sfxMetal);
         } else { showMsg('齿轮发出刺耳的摩擦声... (提示：选B)'); }
       }
 
-      // 转场状态机升级：接收专属过场音效 transSfx
       function startTransition(transTextMsg, nextImageId, oldHotspotId, newHotspotId, successMsg, nextLevelNum, nextBgmTarget, transSfx) {
         const transScreen = document.getElementById('transition-screen');
         const transText = document.getElementById('trans-text');
@@ -240,9 +233,9 @@
         transScreen.style.opacity = '1';
         transScreen.style.pointerEvents = 'auto'; 
         
-        currentLevel = -1; // 锁定态
+        currentLevel = -1; 
         
-        if(transSfx) playSFX(transSfx); // 播放对应的细节音效 (开门/燃烧/齿轮)
+        if(transSfx) playSFX(transSfx); 
 
         setTimeout(() => { transText.style.opacity = '1'; }, 800);
 
