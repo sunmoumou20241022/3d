@@ -2,26 +2,32 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>寻宝洛阳 - 双关卡连环版</title>
+    <title>寻宝洛阳 - 三关连环版</title>
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <style>
       body { font-family: '楷体', 'STKaiti', serif; margin: 0; overflow: hidden; }
-      
-      /* 顶部提示框 */
       #ui { position: absolute; top: 10%; left: 50%; transform: translateX(-50%); z-index: 10; color: #fff; text-align: center; width: 90%; pointer-events: none; }
       .msg-box { background: rgba(15, 8, 3, 0.9); padding: 15px 25px; border-radius: 8px; display: none; font-size: 20px; border: 1px solid #d4af37; box-shadow: 0 0 15px #d4af37;}
       
-      /* ================= 解谜面板通用样式 ================= */
-      .puzzle-overlay {
-        display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0, 0, 0, 0.85); z-index: 999; 
-        flex-direction: column; align-items: center; justify-content: center;
-      }
-      
-      /* 第一关：暗黑色调石门面板 */
+      .puzzle-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 999; flex-direction: column; align-items: center; justify-content: center; }
+      .puzzle-board { border-radius: 10px; padding: 30px; text-align: center; max-width: 85%; position: relative; }
+      .puzzle-title { font-size: 26px; margin-bottom: 15px; font-weight: bold; padding-bottom: 10px; letter-spacing: 2px;}
+      .poem-text { font-size: 24px; text-align: center; margin: 20px 0; letter-spacing: 2px; font-weight: bold; line-height: 1.4;}
+      .poem-desc { font-size: 18px; margin-bottom: 25px; line-height: 1.5;}
+      .option-btn { display: block; width: 100%; padding: 15px; font-size: 20px; font-family: '楷体'; border-radius: 5px; cursor: pointer; margin-bottom: 15px; transition: all 0.1s; }
+      .option-btn:active { transform: scale(0.98); }
+      .close-btn { position: absolute; top: 10px; right: 15px; font-size: 24px; cursor: pointer; }
+
+      /* 第一关：暗黑石门 */
       #board-1 { background: #2c1e16; border: 3px solid #d4af37; box-shadow: 0 0 50px #000; }
-      
-      /* 第二关：丝帛/羊皮纸色调面板 */
+      #board-1 .puzzle-title { color: #d4af37; border-bottom: 1px solid #d4af37; }
+      #board-1 .poem-desc { color: #eeddcc; }
+      #board-1 .poem-text { color: #fff; }
+      #board-1 .option-btn { background: linear-gradient(180deg, #4a2e1b 0%, #2a1609 100%); color: #eeddcc; border: 1px solid #d4af37; }
+      #board-1 .option-btn:hover { background: #d4af37; color: #000; }
+      #board-1 .close-btn { color: #d4af37; }
+
+      /* 第二关：丝帛古卷 */
       #board-2 { background: #e8dcc7; border: 3px solid #8b4513; box-shadow: 0 0 50px rgba(139,69,19,0.5); }
       #board-2 .puzzle-title { color: #8b4513; border-bottom: 2px solid #8b4513; }
       #board-2 .poem-desc { color: #333; font-weight: bold; }
@@ -30,25 +36,16 @@
       #board-2 .option-btn:hover { background: #d4af37; color: #fff; }
       #board-2 .close-btn { color: #8b4513; }
 
-      .puzzle-board { border-radius: 10px; padding: 30px; text-align: center; max-width: 85%; position: relative; }
-      .puzzle-title { color: #d4af37; font-size: 26px; margin-bottom: 15px; font-weight: bold; border-bottom: 1px solid #d4af37; padding-bottom: 10px; letter-spacing: 2px;}
-      .poem-text { font-size: 24px; color: #fff; text-align: center; margin: 20px 0; letter-spacing: 2px; font-weight: bold; line-height: 1.4;}
-      .poem-desc { color: #eeddcc; font-size: 18px; margin-bottom: 25px; line-height: 1.5;}
+      /* 第三关：青铜机械 */
+      #board-3 { background: #1a252c; border: 3px solid #5f9ea0; box-shadow: 0 0 50px rgba(95,158,160,0.5); }
+      #board-3 .puzzle-title { color: #5f9ea0; border-bottom: 2px solid #5f9ea0; }
+      #board-3 .poem-desc { color: #a0b8b8; }
+      #board-3 .poem-text { color: #e0ffff; }
+      #board-3 .option-btn { background: #2f4f4f; color: #e0ffff; border: 1px solid #5f9ea0; }
+      #board-3 .option-btn:hover { background: #5f9ea0; color: #fff; }
+      #board-3 .close-btn { color: #5f9ea0; }
 
-      .option-btn {
-        display: block; width: 100%; background: linear-gradient(180deg, #4a2e1b 0%, #2a1609 100%);
-        border: 1px solid #d4af37; color: #eeddcc; padding: 15px; font-size: 20px; font-family: '楷体';
-        border-radius: 5px; cursor: pointer; margin-bottom: 15px; transition: all 0.1s;
-      }
-      .option-btn:active { transform: scale(0.98); }
-      .close-btn { position: absolute; top: 10px; right: 15px; color: #d4af37; font-size: 24px; cursor: pointer; }
-
-      /* ================= 电影级转场 ================= */
-      #transition-screen {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 1000;
-        opacity: 0; pointer-events: none; transition: opacity 1.5s ease-in-out; 
-        display: flex; flex-direction: column; align-items: center; justify-content: center;
-      }
+      #transition-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 1.5s ease-in-out; display: flex; flex-direction: column; align-items: center; justify-content: center; }
       .transition-text { color: #d4af37; font-size: 24px; letter-spacing: 5px; opacity: 0; transition: opacity 1s ease-in-out; text-shadow: 0 0 10px #d4af37;}
       #compass { position: absolute; bottom: 30px; left: 30px; z-index: 10; color: #d4af37; font-size: 16px; width: 60px; height: 60px; border: 1px solid #d4af37; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.4); }
     </style>
@@ -59,6 +56,7 @@
     <div id="transition-screen"><div id="trans-text" class="transition-text"></div></div>
     <div id="compass">寻龙点穴</div>
 
+    <!-- 第一关：石门 (4个选项) -->
     <div id="puzzle-1" class="puzzle-overlay">
       <div id="board-1" class="puzzle-board">
         <div class="close-btn" onclick="closePuzzle(1)">✖</div>
@@ -67,21 +65,40 @@
         <div class="poem-text">“洛阳亲友如相问，<br>_____________。”</div>
         <button class="option-btn" onclick="checkAnswer1('wrong')">A. 不及汪伦送我情</button>
         <button class="option-btn" onclick="checkAnswer1('correct')">B. 一片冰心在玉壶</button>
+        <button class="option-btn" onclick="checkAnswer1('wrong')">C. 孤帆远影碧空尽</button>
+        <button class="option-btn" onclick="checkAnswer1('wrong')">D. 天涯若比邻</button>
       </div>
     </div>
 
+    <!-- 第二关：藏经卷轴 (4个选项) -->
     <div id="puzzle-2" class="puzzle-overlay">
       <div id="board-2" class="puzzle-board">
         <div class="close-btn" onclick="closePuzzle(2)">✖</div>
         <div class="puzzle-title">西域商路密卷</div>
-        <div class="poem-desc">你在书架深处翻出一卷发黄的丝帛，上面写着大唐西域商会的机密口令。只有对出口令，才能打开书架后的密道：</div>
+        <div class="poem-desc">书架深处的丝帛写着大唐西域商会的机密口令，唯有对出方可开启密道：</div>
         <div class="poem-text">“劝君更尽一杯酒，<br>西出____无故人。”</div>
         <button class="option-btn" onclick="checkAnswer2('wrong')">A. 雁门</button>
         <button class="option-btn" onclick="checkAnswer2('correct')">B. 阳关</button>
         <button class="option-btn" onclick="checkAnswer2('wrong')">C. 玉门</button>
+        <button class="option-btn" onclick="checkAnswer2('wrong')">D. 楼兰</button>
       </div>
     </div>
 
+    <!-- 第三关：青铜八卦 (新增) -->
+    <div id="puzzle-3" class="puzzle-overlay">
+      <div id="board-3" class="puzzle-board">
+        <div class="close-btn" onclick="closePuzzle(3)">✖</div>
+        <div class="puzzle-title">青铜八卦锁</div>
+        <div class="poem-desc">你来到了深渊底部的【青铜机关室】。巨大的齿轮卡死，若要齿轮倒转开启佛窟，需破解天干之谜：</div>
+        <div class="poem-text">“天干地支中，‘甲’对应的五行是？”</div>
+        <button class="option-btn" onclick="checkAnswer3('wrong')">A. 金</button>
+        <button class="option-btn" onclick="checkAnswer3('correct')">B. 木</button>
+        <button class="option-btn" onclick="checkAnswer3('wrong')">C. 水</button>
+        <button class="option-btn" onclick="checkAnswer3('wrong')">D. 火</button>
+      </div>
+    </div>
+
+    <!-- 3D 场景 -->
     <a-scene renderer="colorManagement: true; antialias: true;">
       <a-sky id="main-sky" src="room1.jpg" rotation="0 -90 0"></a-sky>
 
@@ -89,86 +106,89 @@
         <a-cursor cursor="rayOrigin: mouse" raycaster="objects: .interactive" color="#fff" radius-inner="0.01" radius-outer="0.02"></a-cursor>
       </a-entity>
       
+      <!-- 第一关热区 -->
       <a-circle id="hotspot-1" class="interactive" position="-1 -0.5 -4.8" radius="1.5" opacity="0" onclick="openPuzzle(1)"></a-circle>
 
+      <!-- 第二关热区：缩小并改为微小呼吸光斑 -->
       <a-entity id="hotspot-2" position="3 0 -2" visible="false">
-         <a-circle class="interactive" radius="1.5" opacity="0" onclick="openPuzzle(2)"></a-circle>
-         <a-ring radius-inner="0.3" radius-outer="0.35" color="#FFD700" opacity="0.3" animation="property: scale; to: 1.2 1.2 1.2; dir: alternate; loop: true; dur: 2000"></a-ring>
+         <a-circle class="interactive" radius="0.8" opacity="0" onclick="openPuzzle(2)"></a-circle>
+         <a-sphere radius="0.08" color="#FFD700" material="emissive: #FFD700; emissiveIntensity: 0.8" opacity="0.6" animation="property: opacity; to: 0.1; dir: alternate; loop: true; dur: 1500"></a-sphere>
+      </a-entity>
+
+      <!-- 第三关热区：青铜幽蓝光斑 -->
+      <a-entity id="hotspot-3" position="-2 -1 3" visible="false">
+         <a-circle class="interactive" radius="0.8" opacity="0" onclick="openPuzzle(3)"></a-circle>
+         <a-sphere radius="0.08" color="#00FFFF" material="emissive: #00FFFF; emissiveIntensity: 0.8" opacity="0.6" animation="property: opacity; to: 0.1; dir: alternate; loop: true; dur: 1500"></a-sphere>
       </a-entity>
 
     </a-scene>
 
     <script>
-      // UI 开关控制
-function openPuzzle(num) { document.getElementById('puzzle-' + num).style.display = 'flex'; }
-function closePuzzle(num) { document.getElementById('puzzle-' + num).style.display = 'none'; }
+      function openPuzzle(num) { document.getElementById('puzzle-' + num).style.display = 'flex'; }
+      function closePuzzle(num) { document.getElementById('puzzle-' + num).style.display = 'none'; }
 
-// ================= 第一关逻辑 =================
-function checkAnswer1(result) {
-  if (result === 'correct') {
-    closePuzzle(1);
-    // 转场参数：文案, 目标图片, 隐藏旧热区, 显示新热区, 成功提示
-    startTransition('机关轰鸣，天旋地转...', 'room2.jpg', 'hotspot-1', 'hotspot-2', '轰隆隆...\n石壁裂开，你进入了【胡商藏经阁】');
-  } else { showMsg('石壁纹丝不动... (提示：选B)'); }
-}
+      function checkAnswer1(result) {
+        if (result === 'correct') {
+          closePuzzle(1);
+          startTransition('机关轰鸣，天旋地转...', 'room2.jpg', 'hotspot-1', 'hotspot-2', '轰隆隆...\n石壁裂开，你进入了【胡商藏经阁】');
+        } else { showMsg('石壁纹丝不动... (提示：选B)'); }
+      }
 
-// ================= 第二关逻辑 =================
-function checkAnswer2(result) {
-  if (result === 'correct') {
-    closePuzzle(2);
-    // 转场到第三关 (青铜机关室)
-    startTransition('丝帛燃烧，书架缓缓移开...', 'room3.jpg', 'hotspot-2', null, '你发现了深渊底部的【青铜机关室】！');
-  } else { showMsg('口令错误，密卷上的文字变得模糊... (提示：选B)'); }
-}
+      function checkAnswer2(result) {
+        if (result === 'correct') {
+          closePuzzle(2);
+          startTransition('丝帛燃烧，书架缓缓移开...', 'room3.jpg', 'hotspot-2', 'hotspot-3', '你发现了深渊底部的【青铜机关室】！');
+        } else { showMsg('口令错误，密卷上的文字变得模糊... (提示：选B)'); }
+      }
 
-// ================= 核心封装：通用电影级转场 (彻底修复“幽灵热区”Bug) =================
-function startTransition(transTextMsg, nextImageId, oldHotspotId, newHotspotId, successMsg) {
-  const transScreen = document.getElementById('transition-screen');
-  const transText = document.getElementById('trans-text');
-  
-  transText.innerText = transTextMsg; // 设置转场文字
-  transScreen.style.opacity = '1';
-  transScreen.style.pointerEvents = 'auto'; 
-  
-  setTimeout(() => { transText.style.opacity = '1'; }, 800);
+      function checkAnswer3(result) {
+        if (result === 'correct') {
+          closePuzzle(3);
+          startTransition('青铜巨门缓缓开启，佛光普照...', 'room4.jpg', 'hotspot-3', null, '震撼！你抵达了终极宝藏：【终极佛窟】！');
+        } else { showMsg('齿轮发出刺耳的摩擦声... (提示：选B)'); }
+      }
 
-  setTimeout(() => {
-    // 1. 切换 3D 背景图
-    document.getElementById('main-sky').setAttribute('src', nextImageId); 
-    
-    // 2. 【核心修复】彻底超度旧热区：物理发配到十万八千里外！
-    if(oldHotspotId) {
-      let oldEl = document.getElementById(oldHotspotId);
-      oldEl.setAttribute('visible', 'false');
-      oldEl.setAttribute('position', '0 -1000 0'); // 物理隔离，直接丢到地底
-      oldEl.classList.remove('interactive'); // 剥离本体的点击类
-      
-      // 如果它内部有子元素带交互，也一并剥离
-      let child = oldEl.querySelector('.interactive');
-      if(child) child.classList.remove('interactive');
-    }
+      function startTransition(transTextMsg, nextImageId, oldHotspotId, newHotspotId, successMsg) {
+        const transScreen = document.getElementById('transition-screen');
+        const transText = document.getElementById('trans-text');
+        
+        transText.innerText = transTextMsg; 
+        transScreen.style.opacity = '1';
+        transScreen.style.pointerEvents = 'auto'; 
+        
+        setTimeout(() => { transText.style.opacity = '1'; }, 800);
 
-    // 3. 激活新关卡的热区
-    if(newHotspotId) {
-      let newEl = document.getElementById(newHotspotId);
-      newEl.setAttribute('visible', 'true');
-      // 给一点延迟，确保 A-Frame 渲染完新元素后再加上可点击属性
-      setTimeout(() => { 
-        let clickArea = newEl.querySelector('a-circle');
-        if(clickArea) clickArea.classList.add('interactive'); 
-      }, 100);
-    }
-  }, 1800);
+        setTimeout(() => {
+          document.getElementById('main-sky').setAttribute('src', nextImageId); 
+          
+          if(oldHotspotId) {
+            let oldEl = document.getElementById(oldHotspotId);
+            oldEl.setAttribute('visible', 'false');
+            oldEl.setAttribute('position', '0 -1000 0'); 
+            oldEl.classList.remove('interactive'); 
+            let child = oldEl.querySelector('.interactive');
+            if(child) child.classList.remove('interactive');
+          }
 
-  setTimeout(() => {
-    transText.style.opacity = '0';
-    transScreen.style.opacity = '0';
-    transScreen.style.pointerEvents = 'none'; 
-    setTimeout(() => { showMsg(successMsg); }, 1500);
-  }, 4000);
-}
+          if(newHotspotId) {
+            let newEl = document.getElementById(newHotspotId);
+            newEl.setAttribute('visible', 'true');
+            setTimeout(() => { 
+              let clickArea = newEl.querySelector('a-circle');
+              if(clickArea) clickArea.classList.add('interactive'); 
+            }, 100);
+          }
+        }, 1800);
 
-function showMsg(text) { const box = document.getElementById('msg'); box.innerText = text; box.style.display = 'block'; setTimeout(() => { box.style.display = 'none'; }, 3500); }
+        setTimeout(() => {
+          transText.style.opacity = '0';
+          transScreen.style.opacity = '0';
+          transScreen.style.pointerEvents = 'none'; 
+          setTimeout(() => { showMsg(successMsg); }, 1500);
+        }, 4000);
+      }
+
+      function showMsg(text) { const box = document.getElementById('msg'); box.innerText = text; box.style.display = 'block'; setTimeout(() => { box.style.display = 'none'; }, 3500); }
     </script>
   </body>
 </html>
