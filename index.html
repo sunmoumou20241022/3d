@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>寻宝洛阳 - 死亡惩罚版</title>
+    <title>寻宝洛阳 - 凝视彩蛋版</title>
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <style>
       body { font-family: '楷体', 'STKaiti', serif; margin: 0; overflow: hidden; background: #000; }
@@ -36,10 +36,6 @@
       #board-3 .option-btn { background: #2f4f4f; color: #e0ffff; border: 1px solid #5f9ea0; }
       #board-3 .option-btn:hover { background: #5f9ea0; color: #fff; }
 
-      #easter-egg-ui { background: url('https://www.transparenttextures.com/patterns/aged-paper.png'), #d2b48c; border: 2px solid #5c3a21; box-shadow: 0 0 40px rgba(0,0,0,0.8); }
-      #easter-egg-ui .puzzle-title { color: #5c3a21; border-color: #5c3a21; font-size: 22px; }
-      #easter-egg-ui .poem-desc { color: #333; font-size: 16px; text-align: left; line-height: 1.8; font-family: '宋体', serif; }
-
       #transition-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 1000; opacity: 1; pointer-events: none; transition: opacity 1.5s ease-in-out; display: flex; flex-direction: column; align-items: center; justify-content: center; }
       .transition-text { color: #d4af37; font-size: 24px; letter-spacing: 5px; opacity: 0; transition: opacity 1s ease-in-out; text-shadow: 0 0 10px #d4af37;}
       #compass { position: absolute; bottom: 30px; left: 30px; z-index: 10; color: #d4af37; font-size: 16px; width: 60px; height: 60px; border: 1px solid #d4af37; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.4); }
@@ -54,24 +50,22 @@
         100% { box-shadow: 0 0 20px rgba(212, 175, 55, 0.5) inset, 0 0 35px rgba(212, 175, 55, 0.6); text-shadow: 0 0 15px rgba(212, 175, 55, 1); }
       }
 
-      /* ================= 死亡惩罚幕布 ================= */
-      #game-over-screen {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: #000; z-index: 9999; display: none;
-        flex-direction: column; align-items: center; justify-content: center;
-      }
-      .death-msg {
-        color: #8b0000; font-family: '楷体', 'STKaiti', serif; text-align: center;
-        animation: fadeBlood 4s forwards;
-      }
+      #game-over-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; }
+      .death-msg { color: #8b0000; font-family: '楷体', 'STKaiti', serif; text-align: center; animation: fadeBlood 4s forwards; }
       .death-main { font-size: 50px; letter-spacing: 10px; margin-bottom: 30px; text-shadow: 0 0 20px #8b0000; font-weight: bold; }
       .death-sub { font-size: 24px; color: #555; letter-spacing: 5px; }
+      @keyframes fadeBlood { 0% { opacity: 0; transform: scale(0.9); } 50% { opacity: 1; transform: scale(1); } 100% { opacity: 1; transform: scale(1); } }
 
-      @keyframes fadeBlood {
-        0% { opacity: 0; transform: scale(0.9); }
-        50% { opacity: 1; transform: scale(1); }
-        100% { opacity: 1; transform: scale(1); }
-      }
+      /* ================= 秘闻彩蛋 UI ================= */
+      #secret-panel { background: #222; border: 2px solid #d4af37; box-shadow: 0 0 50px rgba(212, 175, 55, 0.4); max-width: 600px; padding: 20px;}
+      .secret-announcement { color: #ffeb3b; font-size: 28px; margin-bottom: 20px; font-weight: bold; text-shadow: 0 0 10px #ffeb3b; }
+      .secret-content img { max-width: 100%; max-height: 250px; border-radius: 5px; border: 1px solid #555; margin-bottom: 15px; }
+      .secret-title { color: #d4af37; font-size: 22px; margin-bottom: 10px; }
+      .secret-text { color: #ccc; font-size: 18px; line-height: 1.6; text-align: left; }
+      
+      /* 视线加载动画器 (UI层) */
+      #gaze-loader { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 40px; height: 40px; border: 4px solid transparent; border-top-color: #d4af37; border-radius: 50%; z-index: 100; display: none; }
+      @keyframes spin { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(360deg); } }
     </style>
   </head>
   <body>
@@ -91,49 +85,50 @@
       <button id="start-btn">触碰石门，进入地宫</button>
     </div>
 
-    <!-- 死亡惩罚 UI -->
     <div id="game-over-screen">
       <div class="death-msg">
         <div class="death-main">线索错误，坠入迷局</div>
-        <div class="death-sub">密室机关闭合  缺氧死亡.</div>
+        <div class="death-sub">密室机关闭合... 缺氧 Died.</div>
       </div>
     </div>
 
-    <div id="ui"><div id="msg" class="msg-box"></div></div>
+    <div id="ui"><div id="msg" class="msg-box"></div><div id="gaze-loader"></div></div>
     <div id="transition-screen"><div id="trans-text" class="transition-text"></div></div>
     <div id="compass">寻龙点穴</div>
 
+    <!-- 题目弹窗 -->
     <div id="puzzle-1" class="puzzle-overlay"><div id="board-1" class="puzzle-board"><div class="close-btn" onclick="closePuzzle(1)">✖</div><div class="puzzle-title">龙纹石门机关</div><div class="poem-desc">暗道尽头的凹槽，须对出暗号：</div><div class="poem-text">“洛阳亲友如相问，<br>_____________。”</div><button class="option-btn" onclick="checkAnswer1('wrong')">A. 不及汪伦送我情</button><button class="option-btn" onclick="checkAnswer1('correct')">B. 一片冰心在玉壶</button><button class="option-btn" onclick="checkAnswer1('wrong')">C. 孤帆远影碧空尽</button><button class="option-btn" onclick="checkAnswer1('wrong')">D. 天涯若比邻</button></div></div>
     <div id="puzzle-2" class="puzzle-overlay"><div id="board-2" class="puzzle-board"><div class="close-btn" onclick="closePuzzle(2)">✖</div><div class="puzzle-title">西域商路密卷</div><div class="poem-desc">唯有对出口令方可开启密道：</div><div class="poem-text">“劝君更尽一杯酒，<br>西出____无故人。”</div><button class="option-btn" onclick="checkAnswer2('wrong')">A. 雁门</button><button class="option-btn" onclick="checkAnswer2('correct')">B. 阳关</button><button class="option-btn" onclick="checkAnswer2('wrong')">C. 玉门</button><button class="option-btn" onclick="checkAnswer2('wrong')">D. 楼兰</button></div></div>
     <div id="puzzle-3" class="puzzle-overlay"><div id="board-3" class="puzzle-board"><div class="close-btn" onclick="closePuzzle(3)">✖</div><div class="puzzle-title">青铜八卦锁</div><div class="poem-desc">破解天干之谜以倒转齿轮：</div><div class="poem-text">“天干地支中，‘甲’对应的五行是？”</div><button class="option-btn" onclick="checkAnswer3('wrong')">A. 金</button><button class="option-btn" onclick="checkAnswer3('correct')">B. 木</button><button class="option-btn" onclick="checkAnswer3('wrong')">C. 水</button><button class="option-btn" onclick="checkAnswer3('wrong')">D. 火</button></div></div>
 
-    <div id="easter-egg-panel" class="puzzle-overlay">
-      <div id="easter-egg-ui" class="puzzle-board">
-        <div class="close-btn" onclick="closeEasterEgg()">✖</div>
-        <div class="puzzle-title">【风物志】三彩陶片</div>
-        <div class="poem-desc">你在碎石下摸到一块温润的残片。拂去灰尘，釉色依旧鲜亮。<br><br>这是唐代洛阳窑烧制的黄绿白三彩。当年西域的胡商将丝绸运入神都，又将这陶器驼回波斯。<br><br>它碎在了地宫里，主人大概再也没能踏上归乡的沙丘。</div>
+    <!-- 动态秘闻彩蛋面板 -->
+    <div id="secret-panel-overlay" class="puzzle-overlay">
+      <div id="secret-panel" class="puzzle-board">
+        <div class="close-btn" style="color:#d4af37;" onclick="closeSecret()">✖</div>
+        <div class="secret-announcement">福运当头，你找到了唐朝秘闻</div>
+        <div class="secret-content">
+          <img id="secret-img" src="" alt="Secret Image">
+          <div id="secret-title" class="secret-title"></div>
+          <div id="secret-text" class="secret-text"></div>
+        </div>
       </div>
     </div>
 
     <a-scene renderer="colorManagement: true; antialias: true;">
       <a-sky id="main-sky" src="room1.jpg" rotation="0 -90 0"></a-sky>
 
+      <!-- 光标射线器增加 fuse 检测参数 -->
       <a-entity camera look-controls="pointerLockEnabled: false;">
-        <a-cursor cursor="rayOrigin: mouse" raycaster="objects: .interactive" color="#fff" radius-inner="0.01" radius-outer="0.02"></a-cursor>
+        <a-cursor cursor="rayOrigin: mouse; fuse: false" raycaster="objects: .interactive" color="#fff" radius-inner="0.01" radius-outer="0.02"></a-cursor>
       </a-entity>
 
       <a-light id="dynamic-light" type="point" color="#FFAA00" position="0 1 -2" intensity="0.6" animation="property: intensity; to: 0.3; dir: alternate; loop: true; dur: 800"></a-light>
       
-      <a-entity id="dust-particles" visible="false">
-         <a-sphere radius="0.005" color="#FFF" opacity="0.15" position="-1.5 1 -2" animation__pos="property: position; to: -1 2.5 -1.5; dir: alternate; loop: true; dur: 12000; easing: linear" animation__fade="property: opacity; to: 0.05; dir: alternate; loop: true; dur: 3000"></a-sphere>
-         <a-sphere radius="0.008" color="#EEDDCC" opacity="0.1" position="1.5 1.5 -2.5" animation__pos="property: position; to: 0.5 1.8 -2; dir: alternate; loop: true; dur: 15000; easing: easeInOutSine" animation__fade="property: opacity; to: 0.2; dir: alternate; loop: true; dur: 4500"></a-sphere>
-         <a-sphere radius="0.006" color="#FFF" opacity="0.12" position="0 0.8 -3.5" animation__pos="property: position; to: 0.2 2 -3; dir: alternate; loop: true; dur: 18000; easing: linear" animation__fade="property: opacity; to: 0.02; dir: alternate; loop: true; dur: 4000"></a-sphere>
-         <a-sphere radius="0.01" color="#FFD700" opacity="0.08" position="0 1.2 -1.5" animation__pos="property: position; to: 0 1.5 -1.5; dir: alternate; loop: true; dur: 8000; easing: easeInOutSine"></a-sphere>
-      </a-entity>
+      <!-- 天花板隐形凝视触发器 (高度 y=4)，占满头顶视野 -->
+      <a-plane class="interactive" position="0 4 0" rotation="90 0 0" width="10" height="10" material="opacity: 0; transparent: true" onmouseenter="startGaze()" onmouseleave="cancelGaze()"></a-plane>
 
       <a-circle id="hotspot-1" class="interactive" position="-1 -0.5 -4.8" radius="1.5" opacity="0" onclick="openPuzzle(1)"></a-circle>
-      <a-sphere id="hotspot-egg" class="interactive" radius="0.05" position="-2 -1.5 -2" color="#447744" material="emissive: #447744; emissiveIntensity: 0.4" animation="property: opacity; to: 0.2; dir: alternate; loop: true; dur: 1000" onclick="openEasterEgg()"></a-sphere>
-
+      
       <a-entity id="hotspot-2" position="3 0 -2" visible="false">
          <a-circle class="interactive" radius="1.5" opacity="0" onclick="openPuzzle(2)"></a-circle>
          <a-sphere radius="0.08" color="#FFD700" material="emissive: #FFD700; emissiveIntensity: 0.6" opacity="0.6" animation="property: opacity; to: 0.1; dir: alternate; loop: true; dur: 1500"></a-sphere>
@@ -150,11 +145,69 @@
       let currentBgmId = null;
       let audioUnlocked = false;
 
+      // ================= 凝视彩蛋数据与逻辑 =================
+      let gazeTimer = null;
+      const loaderUI = document.getElementById('gaze-loader');
+      
+      const tangSecrets = {
+          1: { 
+              title: "雕版印刷术的萌芽", 
+              text: "虽然这张配图展示了近代的印刷技术，但早在唐朝，中国匠人就已经开始使用木板雕刻印刷佛经与历法，推动了人类文明的传播。", 
+              img: "Die_Buchdruckerei_by_Daniel_Chodowiecki_(150289207).jpg" 
+          },
+          2: { 
+              title: "唐高祖李渊", 
+              text: "公元618年，李渊在长安称帝，建立唐朝。这位开国皇帝奠定了大唐三百年的基业，开启了中国历史上最辉煌的篇章之一。", 
+              img: "TangGaozu.jpg" 
+          },
+          3: { 
+              title: "玄奘西行取经", 
+              text: "唐代高僧玄奘，为求取真经，历经艰难险阻前往天竺。他不仅是伟大的佛教翻译家，更是丝绸之路上中外文化交流的卓越使者。", 
+              img: "Xuanzang_w (1).jpg" 
+          }
+      };
+
+      function startGaze() {
+          // 仅在1-3关且没有打开其他面板时触发
+          if (currentLevel < 1 || currentLevel > 3 || document.querySelector('.puzzle-overlay[style*="display: flex"]')) return;
+          
+          loaderUI.style.display = 'block';
+          loaderUI.style.animation = 'spin 1s linear infinite';
+          
+          gazeTimer = setTimeout(() => {
+              triggerSecret(currentLevel);
+          }, 3000);
+      }
+
+      function cancelGaze() {
+          if (gazeTimer) {
+              clearTimeout(gazeTimer);
+              gazeTimer = null;
+          }
+          loaderUI.style.display = 'none';
+          loaderUI.style.animation = 'none';
+      }
+
+      function triggerSecret(level) {
+          cancelGaze(); // 触发后立即取消定时器状态
+          playAudioSafe('audio-ui');
+          const data = tangSecrets[level];
+          document.getElementById('secret-title').innerText = data.title;
+          document.getElementById('secret-text').innerText = data.text;
+          document.getElementById('secret-img').src = data.img;
+          document.getElementById('secret-panel-overlay').style.display = 'flex';
+      }
+
+      function closeSecret() {
+          playAudioSafe('audio-ui');
+          document.getElementById('secret-panel-overlay').style.display = 'none';
+      }
+
+      // ================= 基础逻辑框架 =================
       function playAudioSafe(id, volume = 0.5) {
           let el = document.getElementById(id);
           if(el) {
-              el.currentTime = 0;
-              el.volume = volume;
+              el.currentTime = 0; el.volume = volume;
               let p = el.play();
               if(p !== undefined) p.catch(e => console.log('Play blocked:', id, e));
           }
@@ -164,37 +217,22 @@
           if (!nextBgmId || currentBgmId === nextBgmId) return;
           let oldEl = currentBgmId ? document.getElementById(currentBgmId) : null;
           let newEl = document.getElementById(nextBgmId);
-          
           let vol = 0.5;
           let fadeOut = setInterval(() => {
-              if (vol > 0.05) { 
-                  vol -= 0.05; 
-                  if(oldEl) oldEl.volume = vol; 
-              } else {
+              if (vol > 0.05) { vol -= 0.05; if(oldEl) oldEl.volume = vol; } 
+              else {
                   clearInterval(fadeOut);
                   if(oldEl) oldEl.pause();
                   currentBgmId = nextBgmId;
-                  if(newEl) {
-                      newEl.volume = 0.5;
-                      newEl.play().catch(e => console.log('BGM crossfade blocked:', e));
-                  }
+                  if(newEl) { newEl.volume = 0.5; newEl.play().catch(e=>console.log(e)); }
               }
           }, 100);
       }
 
-      // ================= 死亡惩罚核心逻辑 =================
       function triggerGameOver() {
-          // 瞬间阻断所有音频，制造窒息般的死寂
           const ids = ['audio-bgm1', 'audio-bgm2', 'audio-bgm3', 'audio-ui', 'audio-door', 'audio-paper', 'audio-metal'];
-          ids.forEach(id => {
-              let el = document.getElementById(id);
-              if(el) { el.pause(); }
-          });
-          
-          // 隐藏所有交互面板
+          ids.forEach(id => { let el = document.getElementById(id); if(el) el.pause(); });
           document.querySelectorAll('.puzzle-overlay').forEach(el => el.style.display = 'none');
-          
-          // 呼出不可逆的死亡黑幕
           document.getElementById('game-over-screen').style.display = 'flex';
       }
 
@@ -203,90 +241,50 @@
             const ids = ['audio-bgm1', 'audio-bgm2', 'audio-bgm3', 'audio-ui', 'audio-paper', 'audio-metal'];
             ids.forEach(id => {
                 let el = document.getElementById(id);
-                if(el) {
-                    el.volume = 0;
-                    let p = el.play();
-                    if(p !== undefined) p.then(() => { el.pause(); el.currentTime = 0; }).catch(e=>console.log(e));
-                }
+                if(el) { el.volume = 0; let p = el.play(); if(p !== undefined) p.then(() => { el.pause(); el.currentTime = 0; }).catch(e=>console.log(e)); }
             });
             audioUnlocked = true;
         }
-
         document.getElementById('start-screen').style.display = 'none';
         document.getElementById('transition-screen').style.opacity = '0';
-        
         playAudioSafe('audio-door');
-        
         setTimeout(() => {
             currentBgmId = 'audio-bgm1';
             let bgm1 = document.getElementById('audio-bgm1');
-            if(bgm1) {
-                bgm1.volume = 0.5;
-                bgm1.play().catch(e => console.log('BGM1 blocked:', e)); 
-            }
+            if(bgm1) { bgm1.volume = 0.5; bgm1.play().catch(e=>console.log(e)); }
         }, 1500);
       });
 
-      function openPuzzle(num) { 
-        if (num !== currentLevel) return;
-        playAudioSafe('audio-ui'); 
-        document.getElementById('puzzle-' + num).style.display = 'flex'; 
-      }
-      function closePuzzle(num) { 
-        playAudioSafe('audio-ui');
-        document.getElementById('puzzle-' + num).style.display = 'none'; 
-      }
-      
-      function openEasterEgg() { 
-          if(currentLevel === 1) {
-             playAudioSafe('audio-ui');
-             document.getElementById('easter-egg-panel').style.display = 'flex'; 
-          }
-      }
-      function closeEasterEgg() { 
-          playAudioSafe('audio-ui');
-          document.getElementById('easter-egg-panel').style.display = 'none'; 
-          document.getElementById('hotspot-egg').setAttribute('visible', 'false'); 
-          document.getElementById('hotspot-egg').classList.remove('interactive');
-      }
+      function openPuzzle(num) { if (num !== currentLevel) return; playAudioSafe('audio-ui'); document.getElementById('puzzle-' + num).style.display = 'flex'; }
+      function closePuzzle(num) { playAudioSafe('audio-ui'); document.getElementById('puzzle-' + num).style.display = 'none'; }
 
       function checkAnswer1(result) {
         if (result === 'correct') {
-          playAudioSafe('audio-ui');
-          closePuzzle(1);
-          closeEasterEgg();
+          playAudioSafe('audio-ui'); closePuzzle(1);
           startTransition('机关轰鸣，天旋地转...', 'room2.jpg', 'hotspot-1', 'hotspot-2', '轰隆隆...\n石壁裂开，你进入了【胡商藏经阁】', 2, null, null);
-        } else { 
-          // 触发死亡分支
-          triggerGameOver(); 
-        }
+        } else { triggerGameOver(); }
       }
 
       function checkAnswer2(result) {
         if (result === 'correct') {
-          playAudioSafe('audio-ui');
-          closePuzzle(2);
+          playAudioSafe('audio-ui'); closePuzzle(2);
           startTransition('丝帛燃烧，书架缓缓移开...', 'room3.jpg', 'hotspot-2', 'hotspot-3', '你发现了深渊底部的【青铜机关室】！', 3, 'audio-bgm2', 'audio-paper');
-        } else { 
-          triggerGameOver(); 
-        }
+        } else { triggerGameOver(); }
       }
 
       function checkAnswer3(result) {
         if (result === 'correct') {
-          playAudioSafe('audio-ui');
-          closePuzzle(3);
+          playAudioSafe('audio-ui'); closePuzzle(3);
           startTransition('青铜巨门缓缓开启，万丈佛光倾泻而出...', 'room4.jpg', 'hotspot-3', null, '震撼！你抵达了终极宝藏：【大唐龙门佛窟】！\n(演示大结局)', 4, 'audio-bgm3', 'audio-metal');
-        } else { 
-          triggerGameOver(); 
-        }
+        } else { triggerGameOver(); }
       }
 
       function startTransition(transTextMsg, nextImageId, oldHotspotId, newHotspotId, successMsg, nextLevelNum, nextBgmTargetId, transSfxId) {
         const transScreen = document.getElementById('transition-screen');
         const transText = document.getElementById('trans-text');
         const dynLight = document.getElementById('dynamic-light');
-        const dustFx = document.getElementById('dust-particles');
+        
+        cancelGaze(); // 转场期间取消所有凝视倒计时
         
         transText.innerText = transTextMsg; 
         transScreen.style.opacity = '1';
@@ -305,14 +303,11 @@
               dynLight.setAttribute('color', '#00FFFF');
           } else if (nextLevelNum === 4) {
               dynLight.setAttribute('visible', 'false');
-              dustFx.setAttribute('visible', 'true');
           }
 
           if(oldHotspotId) {
             let oldEl = document.getElementById(oldHotspotId);
-            oldEl.setAttribute('visible', 'false');
-            oldEl.setAttribute('position', '0 -1000 0'); 
-            oldEl.classList.remove('interactive'); 
+            oldEl.setAttribute('visible', 'false'); oldEl.setAttribute('position', '0 -1000 0'); oldEl.classList.remove('interactive'); 
           }
 
           if(newHotspotId) {
@@ -320,11 +315,7 @@
             newEl.setAttribute('visible', 'true');
             setTimeout(() => { 
               let clickArea = newEl.querySelector('a-circle');
-              if(clickArea) {
-                  clickArea.classList.remove('interactive');
-                  void clickArea.offsetWidth; 
-                  clickArea.classList.add('interactive'); 
-              }
+              if(clickArea) { clickArea.classList.remove('interactive'); void clickArea.offsetWidth; clickArea.classList.add('interactive'); }
             }, 150);
           }
         }, 1800);
@@ -344,8 +335,7 @@
       }
 
       function showMsg(text) { 
-          const box = document.getElementById('msg'); 
-          box.innerText = text; box.style.display = 'block'; 
+          const box = document.getElementById('msg'); box.innerText = text; box.style.display = 'block'; 
           if(currentLevel !== 4) setTimeout(() => { box.style.display = 'none'; }, 3500); 
       }
     </script>
