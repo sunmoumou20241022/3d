@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>寻宝洛阳 - 本地视听终极版</title>
+    <title>寻宝洛阳 - 终极无BUG版</title>
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <style>
       body { font-family: '楷体', 'STKaiti', serif; margin: 0; overflow: hidden; background: #000; }
@@ -51,6 +51,17 @@
   </head>
   <body>
     
+    <!-- 实体化 Audio 资产，强制预加载，防止动态 new Audio 报错 -->
+    <div style="display: none;">
+      <audio id="audio-bgm1" src="bgm1.mp3" loop preload="auto"></audio>
+      <audio id="audio-bgm2" src="bgm2.mp3" loop preload="auto"></audio>
+      <audio id="audio-bgm3" src="bgm3.mp3" loop preload="auto"></audio>
+      <audio id="audio-ui" src="ui.mp3" preload="auto"></audio>
+      <audio id="audio-door" src="door.mp3" preload="auto"></audio>
+      <audio id="audio-paper" src="paper.mp3" preload="auto"></audio>
+      <audio id="audio-metal" src="metal.mp3" preload="auto"></audio>
+    </div>
+
     <div id="start-screen">
       <button id="start-btn">触碰石门，进入洛阳地宫</button>
     </div>
@@ -102,131 +113,130 @@
     </a-scene>
 
     <script>
-     // ================= 全局系统状态与音频管理器 =================
       let currentLevel = 1;
-      let audioUnlocked = false;
+      let currentBgmId = null;
 
-      // 核心资产
-      const audioBgm1 = new Audio('bgm1.mp3'); audioBgm1.loop = true; audioBgm1.volume = 0.5;
-      const audioBgm2 = new Audio('bgm2.mp3'); audioBgm2.loop = true; audioBgm2.volume = 0.5; 
-      const audioBgm3 = new Audio('bgm3.mp3'); audioBgm3.loop = true; audioBgm3.volume = 0.5;
-      
-      const sfxUi = new Audio('ui.mp3');
-      const sfxDoor = new Audio('door.mp3');
-      const sfxPaper = new Audio('paper.mp3');
-      const sfxMetal = new Audio('metal.mp3');
+      // 工具函数：获取并播放DOM音频
+      function playAudioSafe(id, volume = 0.5) {
+          let el = document.getElementById(id);
+          if(el) {
+              el.currentTime = 0;
+              el.volume = volume;
+              let p = el.play();
+              if(p !== undefined) p.catch(e => console.log('Play blocked:', id, e));
+          }
+      }
 
-      let currentBgm = null;
+      function stopAudio(id) {
+          let el = document.getElementById(id);
+          if(el) {
+              el.pause();
+          }
+      }
 
-      function unlockAudio() {
-          if (audioUnlocked) return;
-          // 【修复点 1】：剔除 sfxDoor，防止异步 pause() 切断马上要播放的开门声
-          const allAudioObjects = [audioBgm1, audioBgm2, audioBgm3, sfxUi, sfxPaper, sfxMetal];
-          allAudioObjects.forEach(audio => {
-              audio.volume = 0; 
-              let playPromise = audio.play();
-              if (playPromise !== undefined) {
-                  playPromise.then(_ => {
-                      audio.pause();
-                      audio.currentTime = 0;
-                      audio.volume = 0.5;
-                  }).catch(error => console.log('Audio unlock pending:', error));
+      function switchBGM(nextBgmId) {
+          if (!nextBgmId || currentBgmId === nextBgmId) return;
+          let oldEl = currentBgmId ? document.getElementById(currentBgmId) : null;
+          let newEl = document.getElementById(nextBgmId);
+          
+          let vol = 0.5;
+          let fadeOut = setInterval(() => {
+              if (vol > 0.05) { 
+                  vol -= 0.05; 
+                  if(oldEl) oldEl.volume = vol; 
+              } else {
+                  clearInterval(fadeOut);
+                  if(oldEl) oldEl.pause();
+                  currentBgmId = nextBgmId;
+                  if(newEl) {
+                      newEl.volume = 0.5;
+                      newEl.play().catch(e => console.log('BGM crossfade blocked:', e));
+                  }
               }
-          });
-          audioUnlocked = true;
+          }, 100);
       }
 
-      function playSFX(sfxObj) {
-          if(!sfxObj) return;
-          sfxObj.currentTime = 0; 
-          sfxObj.play().catch(e => console.log('SFX blocked:', e));
-      }
-
-      // 开始界面
+      // 强力解锁机制
       document.getElementById('start-btn').addEventListener('click', () => {
-        unlockAudio();
+        // 瞬间对所有标签执行 play().then(pause) 拿到浏览器的通行证
+        const ids = ['audio-bgm1', 'audio-bgm2', 'audio-bgm3', 'audio-ui', 'audio-door', 'audio-paper', 'audio-metal'];
+        ids.forEach(id => {
+            let el = document.getElementById(id);
+            if(el) {
+                el.volume = 0;
+                let p = el.play();
+                if(p !== undefined) p.then(() => { el.pause(); el.currentTime = 0; }).catch(e=>console.log(e));
+            }
+        });
+
         document.getElementById('start-screen').style.display = 'none';
         document.getElementById('transition-screen').style.opacity = '0';
         
-        // 现在的开门声不会再被切断了
-        playSFX(sfxDoor);
+        // 【核心修复】：点击瞬间直接发声，不等待任何异步状态
+        playAudioSafe('audio-door');
         
         setTimeout(() => {
-            currentBgm = audioBgm1; 
-            currentBgm.play().catch(e => console.log('BGM1 blocked:', e)); 
+            currentBgmId = 'audio-bgm1';
+            let bgm1 = document.getElementById('audio-bgm1');
+            if(bgm1) {
+                bgm1.volume = 0.5;
+                bgm1.play().catch(e => console.log('BGM1 blocked:', e)); 
+            }
         }, 1500);
       });
 
-      function switchBGM(nextBgm) {
-        if (!nextBgm || currentBgm === nextBgm) return;
-        let vol = 0.5;
-        let fadeOut = setInterval(() => {
-            if (vol > 0.05) { 
-                vol -= 0.05; 
-                if(currentBgm) currentBgm.volume = vol; 
-            } else {
-                clearInterval(fadeOut);
-                if(currentBgm) currentBgm.pause();
-                currentBgm = nextBgm;
-                currentBgm.volume = 0.5;
-                currentBgm.play().catch(e => console.log('Crossfade blocked:', e));
-            }
-        }, 100);
-      }
-
-      // UI 交互
       function openPuzzle(num) { 
         if (num !== currentLevel) return;
-        playSFX(sfxUi); 
+        playAudioSafe('audio-ui'); 
         document.getElementById('puzzle-' + num).style.display = 'flex'; 
       }
       function closePuzzle(num) { 
-        playSFX(sfxUi);
+        playAudioSafe('audio-ui');
         document.getElementById('puzzle-' + num).style.display = 'none'; 
       }
       
       function openEasterEgg() { 
           if(currentLevel === 1) {
-             playSFX(sfxUi);
+             playAudioSafe('audio-ui');
              document.getElementById('easter-egg-panel').style.display = 'flex'; 
           }
       }
       function closeEasterEgg() { 
-          playSFX(sfxUi);
+          playAudioSafe('audio-ui');
           document.getElementById('easter-egg-panel').style.display = 'none'; 
           document.getElementById('hotspot-egg').setAttribute('visible', 'false'); 
           document.getElementById('hotspot-egg').classList.remove('interactive');
       }
 
-      // 关卡校验逻辑
       function checkAnswer1(result) {
-        playSFX(sfxUi);
+        playAudioSafe('audio-ui');
         if (result === 'correct') {
           closePuzzle(1);
           closeEasterEgg();
-          // 【修复点 2】：把最后参数的 null 改为 sfxDoor，恢复“机关轰鸣”转场时的音效
-          startTransition('机关轰鸣，天旋地转...', 'room2.jpg', 'hotspot-1', 'hotspot-2', '轰隆隆...\n石壁裂开，你进入了【胡商藏经阁】', 2, null, sfxDoor);
+          // 第一关通关，不用 door 音效，避免和开场重复，直接保持背景音即可
+          startTransition('机关轰鸣，天旋地转...', 'room2.jpg', 'hotspot-1', 'hotspot-2', '轰隆隆...\n石壁裂开，你进入了【胡商藏经阁】', 2, null, null);
         } else { showMsg('石壁纹丝不动... (提示：选B)'); }
       }
 
       function checkAnswer2(result) {
-        playSFX(sfxUi);
+        playAudioSafe('audio-ui');
         if (result === 'correct') {
           closePuzzle(2);
-          startTransition('丝帛燃烧，书架缓缓移开...', 'room3.jpg', 'hotspot-2', 'hotspot-3', '你发现了深渊底部的【青铜机关室】！', 3, audioBgm2, sfxPaper);
+          // 切换到 bgm2.mp3，播放燃烧声
+          startTransition('丝帛燃烧，书架缓缓移开...', 'room3.jpg', 'hotspot-2', 'hotspot-3', '你发现了深渊底部的【青铜机关室】！', 3, 'audio-bgm2', 'audio-paper');
         } else { showMsg('口令错误，密卷上的文字变得模糊... (提示：选B)'); }
       }
 
       function checkAnswer3(result) {
-        playSFX(sfxUi);
+        playAudioSafe('audio-ui');
         if (result === 'correct') {
           closePuzzle(3);
-          startTransition('青铜巨门缓缓开启，万丈佛光倾泻而出...', 'room4.jpg', 'hotspot-3', null, '震撼！你抵达了终极宝藏：【大唐龙门佛窟】！\n(演示大结局)', 4, audioBgm3, sfxMetal);
+          // 切换到 bgm3.mp3，播放金属齿轮声
+          startTransition('青铜巨门缓缓开启，万丈佛光倾泻而出...', 'room4.jpg', 'hotspot-3', null, '震撼！你抵达了终极宝藏：【大唐龙门佛窟】！\n(演示大结局)', 4, 'audio-bgm3', 'audio-metal');
         } else { showMsg('齿轮发出刺耳的摩擦声... (提示：选B)'); }
       }
 
-      // 核心转场函数
-      function startTransition(transTextMsg, nextImageId, oldHotspotId, newHotspotId, successMsg, nextLevelNum, nextBgmTarget, transSfx) {
+      function startTransition(transTextMsg, nextImageId, oldHotspotId, newHotspotId, successMsg, nextLevelNum, nextBgmTargetId, transSfxId) {
         const transScreen = document.getElementById('transition-screen');
         const transText = document.getElementById('trans-text');
         const dynLight = document.getElementById('dynamic-light');
@@ -235,16 +245,15 @@
         transText.innerText = transTextMsg; 
         transScreen.style.opacity = '1';
         transScreen.style.pointerEvents = 'auto'; 
-        
         currentLevel = -1; 
         
-        if(transSfx) playSFX(transSfx); 
+        if(transSfxId) playAudioSafe(transSfxId); 
 
         setTimeout(() => { transText.style.opacity = '1'; }, 800);
 
         setTimeout(() => {
           if(nextImageId) document.getElementById('main-sky').setAttribute('src', nextImageId); 
-          if (nextBgmTarget) switchBGM(nextBgmTarget);
+          if (nextBgmTargetId) switchBGM(nextBgmTargetId);
 
           if (nextLevelNum === 3) {
               dynLight.setAttribute('color', '#00FFFF');
