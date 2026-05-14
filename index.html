@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>寻宝洛阳 - 视听完全体</title>
+    <title>寻宝洛阳 - 视听完全体 (终极版)</title>
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <style>
       body { font-family: '楷体', 'STKaiti', serif; margin: 0; overflow: hidden; background: #000; }
@@ -44,21 +44,28 @@
       #transition-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 1000; opacity: 1; pointer-events: none; transition: opacity 1.5s ease-in-out; display: flex; flex-direction: column; align-items: center; justify-content: center; }
       .transition-text { color: #d4af37; font-size: 24px; letter-spacing: 5px; opacity: 0; transition: opacity 1s ease-in-out; text-shadow: 0 0 10px #d4af37;}
       #compass { position: absolute; bottom: 30px; left: 30px; z-index: 10; color: #d4af37; font-size: 16px; width: 60px; height: 60px; border: 1px solid #d4af37; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.4); }
-      #start-btn { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 15px 40px; font-size: 24px; background: transparent; color: #d4af37; border: 2px solid #d4af37; cursor: pointer; z-index: 1001; font-family: '楷体'; border-radius: 5px; }
+      
+      #start-screen { position: absolute; top:0; left:0; width:100%; height:100%; background:black; display:flex; justify-content:center; align-items:center; z-index: 1001; }
+      #start-btn { padding: 15px 40px; font-size: 24px; background: transparent; color: #d4af37; border: 2px solid #d4af37; cursor: pointer; font-family: '楷体'; border-radius: 5px; transition: 0.3s; }
+      #start-btn:hover { background: rgba(212, 175, 55, 0.2); }
     </style>
   </head>
   <body>
     
-    <button id="start-btn" onclick="startGame()">触碰石门，进入洛阳地宫</button>
+    <div id="start-screen">
+      <button id="start-btn">触碰石门，进入洛阳地宫</button>
+    </div>
 
     <div id="ui"><div id="msg" class="msg-box"></div></div>
     <div id="transition-screen"><div id="trans-text" class="transition-text"></div></div>
     <div id="compass">寻龙点穴</div>
 
+    <!-- 题目弹窗 -->
     <div id="puzzle-1" class="puzzle-overlay"><div id="board-1" class="puzzle-board"><div class="close-btn" onclick="closePuzzle(1)">✖</div><div class="puzzle-title">龙纹石门机关</div><div class="poem-desc">暗道尽头的凹槽，须对出暗号：</div><div class="poem-text">“洛阳亲友如相问，<br>_____________。”</div><button class="option-btn" onclick="checkAnswer1('wrong')">A. 不及汪伦送我情</button><button class="option-btn" onclick="checkAnswer1('correct')">B. 一片冰心在玉壶</button><button class="option-btn" onclick="checkAnswer1('wrong')">C. 孤帆远影碧空尽</button><button class="option-btn" onclick="checkAnswer1('wrong')">D. 天涯若比邻</button></div></div>
     <div id="puzzle-2" class="puzzle-overlay"><div id="board-2" class="puzzle-board"><div class="close-btn" onclick="closePuzzle(2)">✖</div><div class="puzzle-title">西域商路密卷</div><div class="poem-desc">唯有对出口令方可开启密道：</div><div class="poem-text">“劝君更尽一杯酒，<br>西出____无故人。”</div><button class="option-btn" onclick="checkAnswer2('wrong')">A. 雁门</button><button class="option-btn" onclick="checkAnswer2('correct')">B. 阳关</button><button class="option-btn" onclick="checkAnswer2('wrong')">C. 玉门</button><button class="option-btn" onclick="checkAnswer2('wrong')">D. 楼兰</button></div></div>
     <div id="puzzle-3" class="puzzle-overlay"><div id="board-3" class="puzzle-board"><div class="close-btn" onclick="closePuzzle(3)">✖</div><div class="puzzle-title">青铜八卦锁</div><div class="poem-desc">破解天干之谜以倒转齿轮：</div><div class="poem-text">“天干地支中，‘甲’对应的五行是？”</div><button class="option-btn" onclick="checkAnswer3('wrong')">A. 金</button><button class="option-btn" onclick="checkAnswer3('correct')">B. 木</button><button class="option-btn" onclick="checkAnswer3('wrong')">C. 水</button><button class="option-btn" onclick="checkAnswer3('wrong')">D. 火</button></div></div>
 
+    <!-- 彩蛋 -->
     <div id="easter-egg-panel" class="puzzle-overlay">
       <div id="easter-egg-ui" class="puzzle-board">
         <div class="close-btn" onclick="closeEasterEgg()">✖</div>
@@ -75,10 +82,10 @@
         <a-cursor cursor="rayOrigin: mouse" raycaster="objects: .interactive" color="#fff" radius-inner="0.01" radius-outer="0.02"></a-cursor>
       </a-entity>
 
-      <!-- 动态光影 (关卡1-3使用) -->
+      <!-- 动态光影 -->
       <a-light id="dynamic-light" type="point" color="#FFAA00" position="0 1 -2" intensity="0.6" animation="property: intensity; to: 0.3; dir: alternate; loop: true; dur: 800"></a-light>
       
-      <!-- 极度弱化的拟真微尘粒子 (关卡4专属，消除AI感) -->
+      <!-- 微尘粒子 -->
       <a-entity id="dust-particles" visible="false">
          <a-sphere radius="0.005" color="#FFF" opacity="0.15" position="-1.5 1 -2" animation__pos="property: position; to: -1 2.5 -1.5; dir: alternate; loop: true; dur: 12000; easing: linear" animation__fade="property: opacity; to: 0.05; dir: alternate; loop: true; dur: 3000"></a-sphere>
          <a-sphere radius="0.008" color="#EEDDCC" opacity="0.1" position="1.5 1.5 -2.5" animation__pos="property: position; to: 0.5 1.8 -2; dir: alternate; loop: true; dur: 15000; easing: easeInOutSine" animation__fade="property: opacity; to: 0.2; dir: alternate; loop: true; dur: 4500"></a-sphere>
@@ -102,9 +109,11 @@
     </a-scene>
 
     <script>
+      // ================= 全局系统状态与音频管理器 =================
       let currentLevel = 1;
+      let audioUnlocked = false;
 
-      // ================= 全局原生 HTML5 音频引擎 =================
+      // 音频资源实例 (确保同级目录下存在 bgm1.mp3, bgm2.mp3, bgm3.mp3)
       const audioBgm1 = new Audio('bgm1.mp3'); audioBgm1.loop = true; audioBgm1.volume = 0.5;
       const audioBgm2 = new Audio('bgm2.mp3'); audioBgm2.loop = true; audioBgm2.volume = 0.5;
       const audioBgm3 = new Audio('bgm3.mp3'); audioBgm3.loop = true; audioBgm3.volume = 0.5;
@@ -114,37 +123,42 @@
 
       let currentBgm = null;
 
-      // 【核心载荷】：静默解锁浏览器音频沙箱
-      function unlockAudioEngine() {
+      // 核心安全机制：由用户交互手势触发的全局音频解锁
+      function unlockAudio() {
+          if (audioUnlocked) return;
           const allAudioObjects = [audioBgm1, audioBgm2, audioBgm3, sfxClick, sfxRumble];
           allAudioObjects.forEach(audio => {
-              audio.volume = 0; // 静音解锁，防止爆音
+              audio.volume = 0; // 静默解锁
               let playPromise = audio.play();
               if (playPromise !== undefined) {
                   playPromise.then(_ => {
                       audio.pause();
                       audio.currentTime = 0;
-                      audio.volume = 0.5; // 恢复正常音量
-                  }).catch(error => {
-                      console.log('Audio unlock pending user interaction:', error);
-                  });
+                      audio.volume = 0.5;
+                  }).catch(error => console.log('Audio unlock pending:', error));
               }
           });
+          audioUnlocked = true;
       }
 
-      function startGame() {
-        document.getElementById('start-btn').style.display = 'none';
+      // 播放交互音效的封装函数
+      function playSFX(sfxObj) {
+          sfxObj.currentTime = 0; 
+          sfxObj.play().catch(e => console.log('SFX blocked:', e));
+      }
+
+      // 游戏初始化
+      document.getElementById('start-btn').addEventListener('click', () => {
+        unlockAudio(); // 瞬间解锁所有音频状态机
+        document.getElementById('start-screen').style.display = 'none';
         document.getElementById('transition-screen').style.opacity = '0';
         
-        // 1. 在用户首次真实点击时，瞬间解锁所有音频文件
-        unlockAudioEngine();
-
-        // 2. 延迟一点点播放第一关主BGM，确保解锁完成
+        // 延迟播放主背景音
         setTimeout(() => {
             currentBgm = audioBgm1;
             currentBgm.play().catch(e => console.log('BGM1 blocked:', e)); 
         }, 100);
-      }
+      });
 
       function switchBGM(nextBgm) {
         if (!nextBgm || currentBgm === nextBgm) return;
@@ -158,42 +172,37 @@
                 if(currentBgm) currentBgm.pause();
                 currentBgm = nextBgm;
                 currentBgm.volume = 0.5;
-                // 由于已经在 startGame 中解锁，这里的延迟播放将不再被浏览器拦截
                 currentBgm.play().catch(e => console.log('Crossfade blocked:', e));
             }
         }, 100);
       }
 
-      function playClickSFX() {
-          sfxClick.currentTime = 0; 
-          sfxClick.play().catch(e=>console.log(e));
-      }
-
+      // ================= 业务交互逻辑 =================
       function openPuzzle(num) { 
         if (num !== currentLevel) return;
-        playClickSFX(); // 触发点击音效
+        playSFX(sfxClick);
         document.getElementById('puzzle-' + num).style.display = 'flex'; 
       }
       function closePuzzle(num) { 
-        playClickSFX(); // 触发点击音效
+        playSFX(sfxClick);
         document.getElementById('puzzle-' + num).style.display = 'none'; 
       }
       
       function openEasterEgg() { 
           if(currentLevel === 1) {
-             playClickSFX();
+             playSFX(sfxClick);
              document.getElementById('easter-egg-panel').style.display = 'flex'; 
           }
       }
       function closeEasterEgg() { 
-          playClickSFX();
+          playSFX(sfxClick);
           document.getElementById('easter-egg-panel').style.display = 'none'; 
           document.getElementById('hotspot-egg').setAttribute('visible', 'false'); 
           document.getElementById('hotspot-egg').classList.remove('interactive');
       }
 
       function checkAnswer1(result) {
-        playClickSFX();
+        playSFX(sfxClick);
         if (result === 'correct') {
           closePuzzle(1);
           closeEasterEgg();
@@ -202,7 +211,7 @@
       }
 
       function checkAnswer2(result) {
-        playClickSFX();
+        playSFX(sfxClick);
         if (result === 'correct') {
           closePuzzle(2);
           startTransition('丝帛燃烧，书架缓缓移开...', 'room3.jpg', 'hotspot-2', 'hotspot-3', '你发现了深渊底部的【青铜机关室】！', 3, audioBgm2);
@@ -210,13 +219,14 @@
       }
 
       function checkAnswer3(result) {
-        playClickSFX();
+        playSFX(sfxClick);
         if (result === 'correct') {
           closePuzzle(3);
           startTransition('青铜巨门缓缓开启，万丈佛光倾泻而出...', 'room4.jpg', 'hotspot-3', null, '震撼！你抵达了终极宝藏：【大唐龙门佛窟】！\n(演示大结局)', 4, audioBgm3);
         } else { showMsg('齿轮发出刺耳的摩擦声... (提示：选B)'); }
       }
 
+      // 转场状态机
       function startTransition(transTextMsg, nextImageId, oldHotspotId, newHotspotId, successMsg, nextLevelNum, nextBgmTarget) {
         const transScreen = document.getElementById('transition-screen');
         const transText = document.getElementById('trans-text');
@@ -227,17 +237,14 @@
         transScreen.style.opacity = '1';
         transScreen.style.pointerEvents = 'auto'; 
         
-        currentLevel = -1; 
+        currentLevel = -1; // 锁定态
         
-        // 触发沉重的机关过场音效
-        sfxRumble.currentTime = 0;
-        sfxRumble.play().catch(e=>console.log(e));
+        playSFX(sfxRumble); // 播放沉重机关音效
 
         setTimeout(() => { transText.style.opacity = '1'; }, 800);
 
         setTimeout(() => {
           if(nextImageId) document.getElementById('main-sky').setAttribute('src', nextImageId); 
-          
           if (nextBgmTarget) switchBGM(nextBgmTarget);
 
           if (nextLevelNum === 3) {
