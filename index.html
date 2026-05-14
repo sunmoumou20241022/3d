@@ -2,48 +2,50 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>寻宝洛阳 - 终极完全体</title>
+    <!-- 【核心载荷 1】：强制移动端视口规约，禁止用户缩放，适配刘海屏，确保 UI 比例锁定 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>寻宝洛阳 - 全平台兼容完全体</title>
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <style>
-      body { font-family: '楷体', 'STKaiti', serif; margin: 0; overflow: hidden; background: #000; }
+      body { font-family: '楷体', 'STKaiti', serif; margin: 0; overflow: hidden; background: #000; touch-action: none; }
       #ui { position: absolute; top: 10%; left: 50%; transform: translateX(-50%); z-index: 10; color: #fff; text-align: center; width: 90%; pointer-events: none; }
       .msg-box { background: rgba(15, 8, 3, 0.9); padding: 15px 25px; border-radius: 8px; display: none; font-size: 20px; border: 1px solid #d4af37; box-shadow: 0 0 15px #d4af37;}
       
       .puzzle-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 999; flex-direction: column; align-items: center; justify-content: center; }
-      .puzzle-board { border-radius: 10px; padding: 30px; text-align: center; max-width: 85%; position: relative; }
-      .puzzle-title { font-size: 26px; margin-bottom: 15px; font-weight: bold; padding-bottom: 10px; letter-spacing: 2px;}
-      .poem-text { font-size: 24px; text-align: center; margin: 20px 0; letter-spacing: 2px; font-weight: bold; line-height: 1.4;}
-      .poem-desc { font-size: 18px; margin-bottom: 25px; line-height: 1.5;}
-      .option-btn { display: block; width: 100%; padding: 15px; font-size: 20px; font-family: '楷体'; border-radius: 5px; cursor: pointer; margin-bottom: 15px; transition: all 0.1s; }
+      .puzzle-board { border-radius: 10px; padding: 25px; text-align: center; width: 85%; max-width: 500px; position: relative; box-sizing: border-box; }
+      .puzzle-title { font-size: 24px; margin-bottom: 12px; font-weight: bold; padding-bottom: 8px; letter-spacing: 2px;}
+      .poem-text { font-size: 20px; text-align: center; margin: 15px 0; letter-spacing: 2px; font-weight: bold; line-height: 1.4;}
+      .poem-desc { font-size: 16px; margin-bottom: 20px; line-height: 1.5;}
+      .option-btn { display: block; width: 100%; padding: 12px; font-size: 18px; font-family: '楷体'; border-radius: 5px; cursor: pointer; margin-bottom: 12px; transition: all 0.1s; box-sizing: border-box; }
       .option-btn:active { transform: scale(0.98); }
-      .close-btn { position: absolute; top: 10px; right: 15px; font-size: 24px; cursor: pointer; }
+      .close-btn { position: absolute; top: 8px; right: 12px; font-size: 24px; cursor: pointer; }
 
-      #board-1 { background: #2c1e16; border: 3px solid #d4af37; box-shadow: 0 0 50px #000; }
+      #board-1 { background: #2c1e16; border: 3px solid #d4af37; box-shadow: 0 0 40px #000; }
       #board-1 .puzzle-title, #board-1 .close-btn { color: #d4af37; border-color: #d4af37; }
       #board-1 .poem-desc { color: #eeddcc; } #board-1 .poem-text { color: #fff; }
       #board-1 .option-btn { background: linear-gradient(180deg, #4a2e1b 0%, #2a1609 100%); color: #eeddcc; border: 1px solid #d4af37; }
       #board-1 .option-btn:hover { background: #d4af37; color: #000; }
 
-      #board-2 { background: #e8dcc7; border: 3px solid #8b4513; box-shadow: 0 0 50px rgba(139,69,19,0.5); }
+      #board-2 { background: #e8dcc7; border: 3px solid #8b4513; box-shadow: 0 0 40px rgba(139,69,19,0.5); }
       #board-2 .puzzle-title, #board-2 .close-btn { color: #8b4513; border-color: #8b4513; }
       #board-2 .poem-desc { color: #333; } #board-2 .poem-text { color: #800000; }
       #board-2 .option-btn { background: #f4ead5; color: #5c3a21; border: 1px solid #8b4513; }
       #board-2 .option-btn:hover { background: #d4af37; color: #fff; }
 
-      #board-3 { background: #1a252c; border: 3px solid #5f9ea0; box-shadow: 0 0 50px rgba(95,158,160,0.5); }
+      #board-3 { background: #1a252c; border: 3px solid #5f9ea0; box-shadow: 0 0 40px rgba(95,158,160,0.5); }
       #board-3 .puzzle-title, #board-3 .close-btn { color: #5f9ea0; border-color: #5f9ea0; }
       #board-3 .poem-desc { color: #a0b8b8; } #board-3 .poem-text { color: #e0ffff; }
       #board-3 .option-btn { background: #2f4f4f; color: #e0ffff; border: 1px solid #5f9ea0; }
       #board-3 .option-btn:hover { background: #5f9ea0; color: #fff; }
 
       #transition-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 1000; opacity: 1; pointer-events: none; transition: opacity 1.5s ease-in-out; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-      .transition-text { color: #d4af37; font-size: 24px; letter-spacing: 5px; opacity: 0; transition: opacity 1s ease-in-out; text-shadow: 0 0 10px #d4af37;}
-      #compass { position: absolute; bottom: 30px; left: 30px; z-index: 10; color: #d4af37; font-size: 16px; width: 60px; height: 60px; border: 1px solid #d4af37; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.4); }
+      .transition-text { color: #d4af37; font-size: 20px; letter-spacing: 3px; opacity: 0; transition: opacity 1s ease-in-out; text-shadow: 0 0 10px #d4af37; text-align: center; padding: 0 20px;}
+      #compass { position: absolute; bottom: 30px; left: 20px; z-index: 10; color: #d4af37; font-size: 14px; width: 50px; height: 50px; border: 1px solid #d4af37; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.4); }
       
       #start-screen { position: absolute; top:0; left:0; width:100%; height:100%; background: linear-gradient(rgba(10, 5, 5, 0.85), rgba(5, 2, 0, 0.95)), url('room1.jpg') center/cover; display:flex; flex-direction: column; justify-content:center; align-items:center; z-index: 1001; }
-      .game-title { font-size: 65px; color: #d4af37; letter-spacing: 20px; margin-bottom: 60px; font-family: '楷体', 'STKaiti', serif; text-shadow: 0 0 15px rgba(212, 175, 55, 0.6), 0 0 30px rgba(212, 175, 55, 0.4), 4px 4px 5px #000; }
-      #start-btn { padding: 18px 50px; font-size: 26px; background: rgba(20, 10, 5, 0.6); color: #d4af37; border: 2px solid #d4af37; cursor: pointer; font-family: '楷体', 'STKaiti', serif; border-radius: 4px; transition: all 0.3s ease; animation: breatheLight 2.5s infinite alternate ease-in-out; }
-      #start-btn:hover { background: rgba(212, 175, 55, 0.2); transform: scale(1.05); box-shadow: 0 0 40px rgba(212, 175, 55, 0.8); text-shadow: 0 0 10px #fff; }
+      .game-title { font-size: 45px; color: #d4af37; letter-spacing: 15px; margin-bottom: 50px; font-family: '楷体', 'STKaiti', serif; text-shadow: 0 0 15px rgba(212, 175, 55, 0.6), 0 0 30px rgba(212, 175, 55, 0.4), 4px 4px 5px #000; }
+      #start-btn { padding: 15px 40px; font-size: 22px; background: rgba(20, 10, 5, 0.6); color: #d4af37; border: 2px solid #d4af37; cursor: pointer; font-family: '楷体', 'STKaiti', serif; border-radius: 4px; transition: all 0.3s ease; animation: breatheLight 2.5s infinite alternate ease-in-out; }
+      #start-btn:active { background: rgba(212, 175, 55, 0.4); transform: scale(0.95); }
 
       @keyframes breatheLight {
         0% { box-shadow: 0 0 10px rgba(212, 175, 55, 0.2) inset, 0 0 15px rgba(212, 175, 55, 0.2); text-shadow: 0 0 5px rgba(212, 175, 55, 0.5); }
@@ -52,17 +54,17 @@
 
       #game-over-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; }
       .death-msg { color: #8b0000; font-family: '楷体', 'STKaiti', serif; text-align: center; animation: fadeBlood 4s forwards; }
-      .death-main { font-size: 50px; letter-spacing: 10px; margin-bottom: 30px; text-shadow: 0 0 20px #8b0000; font-weight: bold; }
-      .death-sub { font-size: 24px; color: #555; letter-spacing: 5px; }
+      .death-main { font-size: 35px; letter-spacing: 5px; margin-bottom: 20px; text-shadow: 0 0 20px #8b0000; font-weight: bold; }
+      .death-sub { font-size: 18px; color: #555; letter-spacing: 2px; }
       @keyframes fadeBlood { 0% { opacity: 0; transform: scale(0.9); } 50% { opacity: 1; transform: scale(1); } 100% { opacity: 1; transform: scale(1); } }
 
-      #secret-panel { background: #222; border: 2px solid #d4af37; box-shadow: 0 0 50px rgba(212, 175, 55, 0.4); max-width: 600px; padding: 20px;}
-      .secret-announcement { color: #ffeb3b; font-size: 28px; margin-bottom: 20px; font-weight: bold; text-shadow: 0 0 10px #ffeb3b; }
-      .secret-content img { max-width: 100%; max-height: 250px; border-radius: 5px; border: 1px solid #555; margin-bottom: 15px; }
-      .secret-title { color: #d4af37; font-size: 22px; margin-bottom: 10px; }
-      .secret-text { color: #ccc; font-size: 18px; line-height: 1.6; text-align: left; }
+      #secret-panel { background: #222; border: 2px solid #d4af37; box-shadow: 0 0 50px rgba(212, 175, 55, 0.4); max-width: 90%; padding: 15px; max-height: 80vh; overflow-y: auto;}
+      .secret-announcement { color: #ffeb3b; font-size: 22px; margin-bottom: 15px; font-weight: bold; text-shadow: 0 0 10px #ffeb3b; }
+      .secret-content img { max-width: 100%; max-height: 200px; border-radius: 5px; border: 1px solid #555; margin-bottom: 15px; }
+      .secret-title { color: #d4af37; font-size: 20px; margin-bottom: 10px; }
+      .secret-text { color: #ccc; font-size: 16px; line-height: 1.5; text-align: left; }
       
-      #gaze-loader { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 40px; height: 40px; border: 4px solid transparent; border-top-color: #d4af37; border-radius: 50%; z-index: 100; display: none; }
+      #gaze-loader { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 40px; height: 40px; border: 4px solid transparent; border-top-color: #d4af37; border-radius: 50%; z-index: 100; display: none; pointer-events: none;}
       @keyframes spin { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(360deg); } }
     </style>
   </head>
@@ -90,19 +92,18 @@
       </div>
     </div>
     
-    <!-- 大结局史诗级奖励 UI (双按钮升级版) -->
+    <!-- 移动端适配的双轨按钮面板 -->
     <div id="finale-screen" class="puzzle-overlay" style="background: rgba(10, 5, 0, 0.9);">
-      <div class="puzzle-board" style="background: transparent; border: none; box-shadow: none; width: 80%; max-width: 800px;">
-        <div class="death-main" style="color: #FFD700; text-shadow: 0 0 30px #FFD700, 0 0 10px #FFF;">寻宝圆满，名留青史</div>
-        <div class="death-sub" style="color: #EEDDCC; font-size: 20px; line-height: 1.8; margin-bottom: 40px;">
+      <div class="puzzle-board" style="background: transparent; border: none; box-shadow: none; width: 95%; max-width: 600px;">
+        <div class="death-main" style="color: #FFD700; text-shadow: 0 0 30px #FFD700, 0 0 10px #FFF; font-size: 32px;">寻宝圆满，名留青史</div>
+        <div class="death-sub" style="color: #EEDDCC; font-size: 16px; line-height: 1.6; margin-bottom: 30px;">
           你成功破解了所有机关，唤醒了沉睡的洛阳记忆。<br>
           大唐的辉煌与西域的驼铃，都已刻入你的灵魂。<br>
           <span style="color: #FFD700; font-weight: bold;">【终极奖励解锁：洛阳风物图鉴与荣誉守陵人称号】</span>
         </div>
-        <!-- 载荷注入点：Flexbox 双轨抉择按钮 -->
-        <div style="display: flex; justify-content: center; gap: 30px;">
-          <button class="option-btn" style="background: #d4af37; color: #000; border: 2px solid #FFF; font-weight: bold; width: 40%; margin: 0;" onclick="restartGame()">再入轮回<br><span style="font-size: 16px;">(重新开始)</span></button>
-          <button class="option-btn" style="background: rgba(40, 20, 10, 0.8); color: #d4af37; border: 2px solid #d4af37; font-weight: bold; width: 40%; margin: 0;" onclick="stayInRoom()">驻留此地<br><span style="font-size: 16px;">(继续探索)</span></button>
+        <div style="display: flex; justify-content: center; gap: 15px; flex-direction: row; flex-wrap: wrap;">
+          <button class="option-btn" style="background: #d4af37; color: #000; border: 2px solid #FFF; font-weight: bold; width: 45%; margin: 0;" onclick="restartGame()">再入轮回<br><span style="font-size: 14px;">(重新开始)</span></button>
+          <button class="option-btn" style="background: rgba(40, 20, 10, 0.8); color: #d4af37; border: 2px solid #d4af37; font-weight: bold; width: 45%; margin: 0;" onclick="stayInRoom()">驻留此地<br><span style="font-size: 14px;">(继续探索)</span></button>
         </div>
       </div>
     </div>
@@ -111,13 +112,14 @@
     <div id="transition-screen"><div id="trans-text" class="transition-text"></div></div>
     <div id="compass">寻龙点穴</div>
 
-    <div id="puzzle-1" class="puzzle-overlay"><div id="board-1" class="puzzle-board"><div class="close-btn" onclick="closePuzzle(1)">✖</div><div class="puzzle-title">龙纹石门机关</div><div class="poem-desc">暗道尽头的凹槽，须对出暗号：</div><div class="poem-text">“洛阳亲友如相问，<br>_____________。”</div><button class="option-btn" onclick="checkAnswer1('wrong')">A. 不及汪伦送我情</button><button class="option-btn" onclick="checkAnswer1('correct')">B. 一片冰心在玉壶</button><button class="option-btn" onclick="checkAnswer1('wrong')">C. 孤帆远影碧空尽</button><button class="option-btn" onclick="checkAnswer1('wrong')">D. 天涯若比邻</button></div></div>
-    <div id="puzzle-2" class="puzzle-overlay"><div id="board-2" class="puzzle-board"><div class="close-btn" onclick="closePuzzle(2)">✖</div><div class="puzzle-title">西域商路密卷</div><div class="poem-desc">唯有对出口令方可开启密道：</div><div class="poem-text">“劝君更尽一杯酒，<br>西出____无故人。”</div><button class="option-btn" onclick="checkAnswer2('wrong')">A. 雁门</button><button class="option-btn" onclick="checkAnswer2('correct')">B. 阳关</button><button class="option-btn" onclick="checkAnswer2('wrong')">C. 玉门</button><button class="option-btn" onclick="checkAnswer2('wrong')">D. 楼兰</button></div></div>
-    <div id="puzzle-3" class="puzzle-overlay"><div id="board-3" class="puzzle-board"><div class="close-btn" onclick="closePuzzle(3)">✖</div><div class="puzzle-title">青铜八卦锁</div><div class="poem-desc">破解天干之谜以倒转齿轮：</div><div class="poem-text">“天干地支中，‘甲’对应的五行是？”</div><button class="option-btn" onclick="checkAnswer3('wrong')">A. 金</button><button class="option-btn" onclick="checkAnswer3('correct')">B. 木</button><button class="option-btn" onclick="checkAnswer3('wrong')">C. 水</button><button class="option-btn" onclick="checkAnswer3('wrong')">D. 火</button></div></div>
+    <!-- 所有关卡的 onClick 事件增加了 ontouchstart，确保移动设备即时响应 -->
+    <div id="puzzle-1" class="puzzle-overlay"><div id="board-1" class="puzzle-board"><div class="close-btn" onclick="closePuzzle(1)" ontouchstart="closePuzzle(1)">✖</div><div class="puzzle-title">龙纹石门机关</div><div class="poem-desc">暗道尽头的凹槽，须对出暗号：</div><div class="poem-text">“洛阳亲友如相问，<br>_____________。”</div><button class="option-btn" onclick="checkAnswer1('wrong')">A. 不及汪伦送我情</button><button class="option-btn" onclick="checkAnswer1('correct')">B. 一片冰心在玉壶</button><button class="option-btn" onclick="checkAnswer1('wrong')">C. 孤帆远影碧空尽</button><button class="option-btn" onclick="checkAnswer1('wrong')">D. 天涯若比邻</button></div></div>
+    <div id="puzzle-2" class="puzzle-overlay"><div id="board-2" class="puzzle-board"><div class="close-btn" onclick="closePuzzle(2)" ontouchstart="closePuzzle(2)">✖</div><div class="puzzle-title">西域商路密卷</div><div class="poem-desc">唯有对出口令方可开启密道：</div><div class="poem-text">“劝君更尽一杯酒，<br>西出____无故人。”</div><button class="option-btn" onclick="checkAnswer2('wrong')">A. 雁门</button><button class="option-btn" onclick="checkAnswer2('correct')">B. 阳关</button><button class="option-btn" onclick="checkAnswer2('wrong')">C. 玉门</button><button class="option-btn" onclick="checkAnswer2('wrong')">D. 楼兰</button></div></div>
+    <div id="puzzle-3" class="puzzle-overlay"><div id="board-3" class="puzzle-board"><div class="close-btn" onclick="closePuzzle(3)" ontouchstart="closePuzzle(3)">✖</div><div class="puzzle-title">青铜八卦锁</div><div class="poem-desc">破解天干之谜以倒转齿轮：</div><div class="poem-text">“天干地支中，‘甲’对应的五行是？”</div><button class="option-btn" onclick="checkAnswer3('wrong')">A. 金</button><button class="option-btn" onclick="checkAnswer3('correct')">B. 木</button><button class="option-btn" onclick="checkAnswer3('wrong')">C. 水</button><button class="option-btn" onclick="checkAnswer3('wrong')">D. 火</button></div></div>
 
     <div id="secret-panel-overlay" class="puzzle-overlay">
       <div id="secret-panel" class="puzzle-board">
-        <div class="close-btn" style="color:#d4af37;" onclick="closeSecret()">✖</div>
+        <div class="close-btn" style="color:#d4af37;" onclick="closeSecret()" ontouchstart="closeSecret()">✖</div>
         <div class="secret-announcement">福运当头，你找到了唐朝秘闻</div>
         <div class="secret-content">
           <img id="secret-img" src="" alt="Secret Image">
@@ -224,7 +226,7 @@
 
       function playAudioSafe(id, volume = 0.5) {
           let el = document.getElementById(id);
-          if(el) { el.currentTime = 0; el.volume = volume; let p = el.play(); if(p !== undefined) p.catch(e => console.log('Play blocked:', e)); }
+          if(el) { el.currentTime = 0; el.volume = volume; let p = el.play(); if(p !== undefined) p.catch(e => console.warn('Audio blocked:', e)); }
       }
 
       function switchBGM(nextBgmId) {
@@ -236,7 +238,7 @@
               if (vol > 0.05) { vol -= 0.05; if(oldEl) oldEl.volume = vol; } 
               else {
                   clearInterval(fadeOut); if(oldEl) oldEl.pause(); currentBgmId = nextBgmId;
-                  if(newEl) { newEl.volume = 0.5; newEl.play().catch(e=>console.log(e)); }
+                  if(newEl) { newEl.volume = 0.5; newEl.play().catch(e=>console.warn(e)); }
               }
           }, 100);
       }
@@ -253,9 +255,14 @@
           document.getElementById('finale-screen').style.display = 'flex';
       }
 
-      document.getElementById('start-btn').addEventListener('click', () => {
+      // 【核心载荷 2】：强制双轨事件绑定（click + touchstart），绕过移动端系统底层的静默拦截
+      const startBtn = document.getElementById('start-btn');
+      const startEvents = ['click', 'touchstart'];
+      
+      function initGame(e) {
+        if(e.type === 'touchstart') e.preventDefault(); // 防止穿透点击
         if (!audioUnlocked) {
-            const ids = ['audio-bgm1', 'audio-bgm2', 'audio-bgm3', 'audio-ui', 'audio-paper', 'audio-metal'];
+            const ids = ['audio-bgm1', 'audio-bgm2', 'audio-bgm3', 'audio-ui', 'audio-door', 'audio-paper', 'audio-metal'];
             ids.forEach(id => { let el = document.getElementById(id); if(el) { el.volume = 0; let p = el.play(); if(p !== undefined) p.then(() => { el.pause(); el.currentTime = 0; }).catch(e=>{}); } });
             audioUnlocked = true;
         }
@@ -263,7 +270,9 @@
         document.getElementById('transition-screen').style.opacity = '0';
         playAudioSafe('audio-door');
         setTimeout(() => { currentBgmId = 'audio-bgm1'; let bgm1 = document.getElementById('audio-bgm1'); if(bgm1) { bgm1.volume = 0.5; bgm1.play().catch(e=>{}); } }, 1500);
-      });
+      }
+
+      startEvents.forEach(evt => startBtn.addEventListener(evt, initGame, {passive: false}));
 
       function openPuzzle(num) { if (num !== currentLevel) return; playAudioSafe('audio-ui'); document.getElementById('puzzle-' + num).style.display = 'flex'; }
       function closePuzzle(num) { playAudioSafe('audio-ui'); document.getElementById('puzzle-' + num).style.display = 'none'; }
@@ -366,11 +375,9 @@
           if(currentLevel !== 4) setTimeout(() => { box.style.display = 'none'; }, 3500); 
       }
 
-      // 核心注入：驻留此地逻辑
       function stayInRoom() {
           playAudioSafe('audio-ui');
           document.getElementById('finale-screen').style.display = 'none';
-          // 关闭遮罩，保留在第四关的 WebGL 场景和 BGM 中
       }
 
       function restartGame() {
