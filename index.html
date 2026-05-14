@@ -149,36 +149,43 @@
       let gazeTimer = null;
       const loaderUI = document.getElementById('gaze-loader');
       
-      // ================= 扩容版历史秘闻数据字典 (200~300字) =================
+     // ================= 严格标准化的数据字典 =================
       const tangSecrets = {
           1: { 
               title: "雕版印刷术的黎明与文明的火种", 
               text: "虽然这张配图展示的是十六世纪欧洲的印刷作坊，但在人类文明的浩瀚星河中，真正的印刷先驱源自东方。早在公元七世纪的初唐时期，充满智慧的中国匠人就已经发明并开始使用木板雕刻印刷术。唐代社会经济空前繁荣，文化包容并蓄，佛教的盛行更是催生了对佛经、历法以及日常文化读物的海量需求。为了摆脱传统手抄本效率低下且容易出错的弊端，雕版印刷应运而生。工匠们将文字反刻于平整的木板上，刷上徽墨，覆以宣纸，轻轻拓印，知识便如同插上翅膀般飞入寻常百姓家。这项伟大的技术创新不仅极大地降低了文化传播的成本，打破了少数贵族阶层对教育资源的长期垄断，更为后来宋代毕昇发明活字印刷术奠定了最为坚实的基础，是中华民族对世界文明进程做出的不可磨灭的伟大贡献。", 
-              img: "Die_Buchdruckerei_by_Daniel_Chodowiecki_(150289207).jpg" 
+              img: "print.jpg" // 严格对应全小写规范
           },
           2: { 
               title: "开国之君：唐高祖李渊的霸业", 
               text: "公元618年，隋朝末年天下大乱，烽烟四起，群雄割据逐鹿中原。出身于显赫关陇贵族集团的太原留守李渊，敏锐地洞察到天下大势，顺应历史潮流，在晋阳果断起兵。他率领大军南下，以摧枯拉朽之势攻入当时的政治中心长安，最终接受隋恭帝的禅让，正式登基称帝，定国号为唐。作为大唐帝国的绝对奠基人，唐高祖李渊不仅在建国初期展现了卓越非凡的军事统帅能力与战略眼光，在稳固政权后，更迅速采取了一系列休养生息的治国良策。他颁布了均田制与租庸调制，极大程度地恢复了遭到战火严重破坏的社会生产力；同时修订完善《唐律》，确立三省六部制，构建了高效的国家行政机器。这位往往被后世演义所低估的开国皇帝，成功平定了四方割据势力，为后世长达近三百年的大唐盛世筑牢了最为坚固的根基。", 
-              img: "TangGaozu.jpg" 
+              img: "tang.jpg" // 严格对应全小写规范
           },
           3: { 
               title: "玄奘西行：丝绸之路上的文化苦旅", 
               text: "唐朝贞观初年，高僧玄奘深感当时国内流传的佛教经典存在诸多翻译错误、文本残缺以及教义理论上的严重分歧，为了探求佛法真理，他毅然决定只身前往佛教的发源地天竺求取真经。玄奘法师历经九死一生，孤身穿越漫漫黄沙、环境极其恶劣的塔克拉玛干沙漠，翻越冰雪覆盖、高寒缺氧的葱岭，耗时十余年，行程数万里。他不仅从遥远的异国他乡带回了六百五十七部珍贵的大乘佛教梵文经典，并在归国后于长安大雁塔设立译经场，倾注毕生心血潜心翻译。更为重要的是，他将沿途亲历的西域及中亚、南亚各国的风土人情、地理面貌、历史变迁详细口述，由弟子辩机记录编纂成《大唐西域记》。这部宏伟的巨著不仅成为了后世研究古代丝绸之路的无价之宝，更让玄奘成为了中外文化交流史上最璀璨的使者。", 
-              img: "Xuanzang_w (1).jpg" 
+              img: "monk.jpg" // 严格对应全小写规范
           }
       };
 
-      // 确保触发器中包含 encodeURI 逻辑以防止特殊字符导致 404
+      // ================= 具有防越权与容错兜底的触发器 =================
       function triggerSecret(level) {
           cancelGaze(); 
           playAudioSafe('audio-ui');
           const data = tangSecrets[level];
           document.getElementById('secret-title').innerText = data.title;
           document.getElementById('secret-text').innerText = data.text;
-          document.getElementById('secret-img').src = encodeURI(data.img);
+          
+          const imgEl = document.getElementById('secret-img');
+          // 容错劫持：一旦云端 404，注入 base64 的 SVG 占位图，防止原生碎图破坏 UI
+          imgEl.onerror = function() {
+              console.warn("资产断链拦截: ", data.img);
+              this.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='200'%3E%3Crect width='400' height='200' fill='%23222'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23d4af37' font-size='20' font-family='楷体'%3E[机密图像已损坏]%3C/text%3E%3C/svg%3E";
+          };
+          
+          imgEl.src = encodeURI(data.img);
           document.getElementById('secret-panel-overlay').style.display = 'flex';
       }
-
       function startGaze() {
           // 仅在1-3关且没有打开其他面板时触发
           if (currentLevel < 1 || currentLevel > 3 || document.querySelector('.puzzle-overlay[style*="display: flex"]')) return;
