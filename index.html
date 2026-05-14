@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>寻宝洛阳 - 轮回完全体</title>
+    <title>寻宝洛阳 - 终极完全体</title>
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <style>
       body { font-family: '楷体', 'STKaiti', serif; margin: 0; overflow: hidden; background: #000; }
@@ -90,16 +90,20 @@
       </div>
     </div>
     
-    <!-- 史诗级奖励 UI，默认隐藏 -->
+    <!-- 大结局史诗级奖励 UI (双按钮升级版) -->
     <div id="finale-screen" class="puzzle-overlay" style="background: rgba(10, 5, 0, 0.9);">
-      <div class="puzzle-board" style="background: transparent; border: none; box-shadow: none;">
+      <div class="puzzle-board" style="background: transparent; border: none; box-shadow: none; width: 80%; max-width: 800px;">
         <div class="death-main" style="color: #FFD700; text-shadow: 0 0 30px #FFD700, 0 0 10px #FFF;">寻宝圆满，名留青史</div>
         <div class="death-sub" style="color: #EEDDCC; font-size: 20px; line-height: 1.8; margin-bottom: 40px;">
           你成功破解了所有机关，唤醒了沉睡的洛阳记忆。<br>
           大唐的辉煌与西域的驼铃，都已刻入你的灵魂。<br>
           <span style="color: #FFD700; font-weight: bold;">【终极奖励解锁：洛阳风物图鉴与荣誉守陵人称号】</span>
         </div>
-        <button class="option-btn" style="background: #d4af37; color: #000; border: 2px solid #FFF; font-weight: bold; width: 60%; margin: 0 auto;" onclick="restartGame()">再入轮回 (重新开始)</button>
+        <!-- 载荷注入点：Flexbox 双轨抉择按钮 -->
+        <div style="display: flex; justify-content: center; gap: 30px;">
+          <button class="option-btn" style="background: #d4af37; color: #000; border: 2px solid #FFF; font-weight: bold; width: 40%; margin: 0;" onclick="restartGame()">再入轮回<br><span style="font-size: 16px;">(重新开始)</span></button>
+          <button class="option-btn" style="background: rgba(40, 20, 10, 0.8); color: #d4af37; border: 2px solid #d4af37; font-weight: bold; width: 40%; margin: 0;" onclick="stayInRoom()">驻留此地<br><span style="font-size: 16px;">(继续探索)</span></button>
+        </div>
       </div>
     </div>
 
@@ -153,7 +157,6 @@
          <a-sphere radius="0.08" color="#005555" material="emissive: #005555; emissiveIntensity: 0.3" opacity="0.5" animation="property: opacity; to: 0.1; dir: alternate; loop: true; dur: 2000"></a-sphere>
       </a-entity>
 
-      <!-- 终局大佛触发器：进入第四关时激活，点击后弹出史诗面板 -->
       <a-entity id="hotspot-finale" position="0 0 -5" visible="false">
          <a-circle class="interactive" radius="3" opacity="0" onclick="triggerFinale()"></a-circle>
       </a-entity>
@@ -319,7 +322,6 @@
                   sphere.setAttribute('radius', '0.02'); 
               });
               
-              // 激活终局触发器，需要点击大佛
               let finaleHotspot = document.getElementById('hotspot-finale');
               finaleHotspot.setAttribute('visible', 'true');
               setTimeout(() => { 
@@ -331,7 +333,6 @@
           if(oldHotspotId) {
             let oldEl = document.getElementById(oldHotspotId);
             oldEl.setAttribute('visible', 'false'); 
-            // 核心修复：不能修改 position，否则重置时坐标不对。直接隐藏并移除交互即可。
             let clickArea = oldEl.tagName === 'A-CIRCLE' ? oldEl : oldEl.querySelector('a-circle');
             if (clickArea) clickArea.classList.remove('interactive'); 
           }
@@ -360,7 +361,18 @@
         }, 4000);
       }
 
-      // ================= 状态机全面安全重置逻辑 =================
+      function showMsg(text) { 
+          const box = document.getElementById('msg'); box.innerText = text; box.style.display = 'block'; 
+          if(currentLevel !== 4) setTimeout(() => { box.style.display = 'none'; }, 3500); 
+      }
+
+      // 核心注入：驻留此地逻辑
+      function stayInRoom() {
+          playAudioSafe('audio-ui');
+          document.getElementById('finale-screen').style.display = 'none';
+          // 关闭遮罩，保留在第四关的 WebGL 场景和 BGM 中
+      }
+
       function restartGame() {
           playAudioSafe('audio-ui');
           const ids = ['audio-bgm1', 'audio-bgm2', 'audio-bgm3', 'audio-ui', 'audio-door', 'audio-paper', 'audio-metal'];
@@ -378,7 +390,6 @@
           dynLight.setAttribute('visible', 'true'); dynLight.setAttribute('color', '#FFAA00');
           document.getElementById('dust-particles').setAttribute('visible', 'false');
 
-          // 【核心修复】：彻底重置所有热区的状态，防止第二关卡死
           let h1 = document.getElementById('hotspot-1');
           h1.setAttribute('visible', 'true');
           h1.classList.add('interactive');
@@ -395,7 +406,6 @@
           let fClickArea = finaleHotspot.querySelector('a-circle');
           if (fClickArea) fClickArea.classList.remove('interactive');
 
-          // 重置 UI 提示框样式
           let msgBox = document.getElementById('msg');
           msgBox.style.background = 'rgba(15, 8, 3, 0.9)';
           msgBox.style.color = '#fff';
