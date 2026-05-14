@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>寻宝洛阳 - 凝视彩蛋版</title>
+    <title>寻宝洛阳 - 终极完全体</title>
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <style>
       body { font-family: '楷体', 'STKaiti', serif; margin: 0; overflow: hidden; background: #000; }
@@ -56,14 +56,12 @@
       .death-sub { font-size: 24px; color: #555; letter-spacing: 5px; }
       @keyframes fadeBlood { 0% { opacity: 0; transform: scale(0.9); } 50% { opacity: 1; transform: scale(1); } 100% { opacity: 1; transform: scale(1); } }
 
-      /* ================= 秘闻彩蛋 UI ================= */
       #secret-panel { background: #222; border: 2px solid #d4af37; box-shadow: 0 0 50px rgba(212, 175, 55, 0.4); max-width: 600px; padding: 20px;}
       .secret-announcement { color: #ffeb3b; font-size: 28px; margin-bottom: 20px; font-weight: bold; text-shadow: 0 0 10px #ffeb3b; }
       .secret-content img { max-width: 100%; max-height: 250px; border-radius: 5px; border: 1px solid #555; margin-bottom: 15px; }
       .secret-title { color: #d4af37; font-size: 22px; margin-bottom: 10px; }
       .secret-text { color: #ccc; font-size: 18px; line-height: 1.6; text-align: left; }
       
-      /* 视线加载动画器 (UI层) */
       #gaze-loader { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 40px; height: 40px; border: 4px solid transparent; border-top-color: #d4af37; border-radius: 50%; z-index: 100; display: none; }
       @keyframes spin { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(360deg); } }
     </style>
@@ -91,17 +89,28 @@
         <div class="death-sub">密室机关闭合... 缺氧 Died.</div>
       </div>
     </div>
+    
+    <!-- 大结局史诗级奖励 UI -->
+    <div id="finale-screen" class="puzzle-overlay" style="background: rgba(10, 5, 0, 0.9);">
+      <div class="puzzle-board" style="background: transparent; border: none; box-shadow: none;">
+        <div class="death-main" style="color: #FFD700; text-shadow: 0 0 30px #FFD700, 0 0 10px #FFF;">寻宝圆满，名留青史</div>
+        <div class="death-sub" style="color: #EEDDCC; font-size: 20px; line-height: 1.8; margin-bottom: 40px;">
+          你成功破解了所有机关，唤醒了沉睡的洛阳记忆。<br>
+          大唐的辉煌与西域的驼铃，都已刻入你的灵魂。<br>
+          <span style="color: #FFD700; font-weight: bold;">【终极奖励解锁：洛阳风物图鉴与荣誉守陵人称号】</span>
+        </div>
+        <button class="option-btn" style="background: #d4af37; color: #000; border: 2px solid #FFF; font-weight: bold; width: 60%; margin: 0 auto;" onclick="restartGame()">再入轮回 (重新开始)</button>
+      </div>
+    </div>
 
     <div id="ui"><div id="msg" class="msg-box"></div><div id="gaze-loader"></div></div>
     <div id="transition-screen"><div id="trans-text" class="transition-text"></div></div>
     <div id="compass">寻龙点穴</div>
 
-    <!-- 题目弹窗 -->
     <div id="puzzle-1" class="puzzle-overlay"><div id="board-1" class="puzzle-board"><div class="close-btn" onclick="closePuzzle(1)">✖</div><div class="puzzle-title">龙纹石门机关</div><div class="poem-desc">暗道尽头的凹槽，须对出暗号：</div><div class="poem-text">“洛阳亲友如相问，<br>_____________。”</div><button class="option-btn" onclick="checkAnswer1('wrong')">A. 不及汪伦送我情</button><button class="option-btn" onclick="checkAnswer1('correct')">B. 一片冰心在玉壶</button><button class="option-btn" onclick="checkAnswer1('wrong')">C. 孤帆远影碧空尽</button><button class="option-btn" onclick="checkAnswer1('wrong')">D. 天涯若比邻</button></div></div>
     <div id="puzzle-2" class="puzzle-overlay"><div id="board-2" class="puzzle-board"><div class="close-btn" onclick="closePuzzle(2)">✖</div><div class="puzzle-title">西域商路密卷</div><div class="poem-desc">唯有对出口令方可开启密道：</div><div class="poem-text">“劝君更尽一杯酒，<br>西出____无故人。”</div><button class="option-btn" onclick="checkAnswer2('wrong')">A. 雁门</button><button class="option-btn" onclick="checkAnswer2('correct')">B. 阳关</button><button class="option-btn" onclick="checkAnswer2('wrong')">C. 玉门</button><button class="option-btn" onclick="checkAnswer2('wrong')">D. 楼兰</button></div></div>
     <div id="puzzle-3" class="puzzle-overlay"><div id="board-3" class="puzzle-board"><div class="close-btn" onclick="closePuzzle(3)">✖</div><div class="puzzle-title">青铜八卦锁</div><div class="poem-desc">破解天干之谜以倒转齿轮：</div><div class="poem-text">“天干地支中，‘甲’对应的五行是？”</div><button class="option-btn" onclick="checkAnswer3('wrong')">A. 金</button><button class="option-btn" onclick="checkAnswer3('correct')">B. 木</button><button class="option-btn" onclick="checkAnswer3('wrong')">C. 水</button><button class="option-btn" onclick="checkAnswer3('wrong')">D. 火</button></div></div>
 
-    <!-- 动态秘闻彩蛋面板 -->
     <div id="secret-panel-overlay" class="puzzle-overlay">
       <div id="secret-panel" class="puzzle-board">
         <div class="close-btn" style="color:#d4af37;" onclick="closeSecret()">✖</div>
@@ -117,14 +126,19 @@
     <a-scene renderer="colorManagement: true; antialias: true;">
       <a-sky id="main-sky" src="room1.jpg" rotation="0 -90 0"></a-sky>
 
-      <!-- 光标射线器增加 fuse 检测参数 -->
       <a-entity camera look-controls="pointerLockEnabled: false;">
         <a-cursor cursor="rayOrigin: mouse; fuse: false" raycaster="objects: .interactive" color="#fff" radius-inner="0.01" radius-outer="0.02"></a-cursor>
       </a-entity>
 
       <a-light id="dynamic-light" type="point" color="#FFAA00" position="0 1 -2" intensity="0.6" animation="property: intensity; to: 0.3; dir: alternate; loop: true; dur: 800"></a-light>
       
-      <!-- 天花板隐形凝视触发器 (高度 y=4)，占满头顶视野 -->
+      <a-entity id="dust-particles" visible="false">
+         <a-sphere radius="0.005" color="#FFF" opacity="0.15" position="-1.5 1 -2" animation__pos="property: position; to: -1 2.5 -1.5; dir: alternate; loop: true; dur: 12000; easing: linear" animation__fade="property: opacity; to: 0.05; dir: alternate; loop: true; dur: 3000"></a-sphere>
+         <a-sphere radius="0.008" color="#EEDDCC" opacity="0.1" position="1.5 1.5 -2.5" animation__pos="property: position; to: 0.5 1.8 -2; dir: alternate; loop: true; dur: 15000; easing: easeInOutSine" animation__fade="property: opacity; to: 0.2; dir: alternate; loop: true; dur: 4500"></a-sphere>
+         <a-sphere radius="0.006" color="#FFF" opacity="0.12" position="0 0.8 -3.5" animation__pos="property: position; to: 0.2 2 -3; dir: alternate; loop: true; dur: 18000; easing: linear" animation__fade="property: opacity; to: 0.02; dir: alternate; loop: true; dur: 4000"></a-sphere>
+         <a-sphere radius="0.01" color="#FFD700" opacity="0.08" position="0 1.2 -1.5" animation__pos="property: position; to: 0 1.5 -1.5; dir: alternate; loop: true; dur: 8000; easing: easeInOutSine"></a-sphere>
+      </a-entity>
+
       <a-plane class="interactive" position="0 4 0" rotation="90 0 0" width="10" height="10" material="opacity: 0; transparent: true" onmouseenter="startGaze()" onmouseleave="cancelGaze()"></a-plane>
 
       <a-circle id="hotspot-1" class="interactive" position="-1 -0.5 -4.8" radius="1.5" opacity="0" onclick="openPuzzle(1)"></a-circle>
@@ -145,7 +159,7 @@
       let currentBgmId = null;
       let audioUnlocked = false;
 
-      // ================= 历史秘闻数据字典 (使用你最初始的复杂文件名) =================
+      // ================= 历史秘闻数据字典 =================
       const tangSecrets = {
           1: { 
               title: "雕版印刷术的黎明与文明的火种", 
@@ -164,7 +178,7 @@
           }
       };
 
-      // ================= 凝视彩蛋逻辑与强制 URI 编码防线 =================
+      // ================= 凝视彩蛋与 URI 编码防线 =================
       let gazeTimer = null;
       const loaderUI = document.getElementById('gaze-loader');
 
@@ -188,15 +202,12 @@
           document.getElementById('secret-title').innerText = data.title;
           document.getElementById('secret-text').innerText = data.text;
           
-          // 【核心载荷】：强制对文件名中的空格、括号等特殊字符进行编码，绕过 Vercel 的路径解析阻断
           const safeUrl = data.img.split('/').map(segment => encodeURIComponent(segment)).join('/');
           const imgEl = document.getElementById('secret-img');
-          
           imgEl.onerror = function() {
-              console.error("致命错误: 服务器上找不到该文件。请确认文件已上传至 GitHub 且 Vercel 已更新。");
+              this.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='200'%3E%3Crect width='400' height='200' fill='%23222'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23d4af37' font-size='20' font-family='楷体'%3E[图片加载失败]%3C/text%3E%3C/svg%3E";
           };
           imgEl.src = safeUrl;
-          
           document.getElementById('secret-panel-overlay').style.display = 'flex';
       }
 
@@ -205,14 +216,10 @@
           document.getElementById('secret-panel-overlay').style.display = 'none';
       }
 
-      // ================= 基础交互与音频状态机 (维持原有防竞态逻辑) =================
+      // ================= 基础交互、音频与状态机 =================
       function playAudioSafe(id, volume = 0.5) {
           let el = document.getElementById(id);
-          if(el) {
-              el.currentTime = 0; el.volume = volume;
-              let p = el.play();
-              if(p !== undefined) p.catch(e => console.log('Play blocked:', id, e));
-          }
+          if(el) { el.currentTime = 0; el.volume = volume; let p = el.play(); if(p !== undefined) p.catch(e => console.log('Play blocked:', e)); }
       }
 
       function switchBGM(nextBgmId) {
@@ -223,9 +230,7 @@
           let fadeOut = setInterval(() => {
               if (vol > 0.05) { vol -= 0.05; if(oldEl) oldEl.volume = vol; } 
               else {
-                  clearInterval(fadeOut);
-                  if(oldEl) oldEl.pause();
-                  currentBgmId = nextBgmId;
+                  clearInterval(fadeOut); if(oldEl) oldEl.pause(); currentBgmId = nextBgmId;
                   if(newEl) { newEl.volume = 0.5; newEl.play().catch(e=>console.log(e)); }
               }
           }, 100);
@@ -241,20 +246,13 @@
       document.getElementById('start-btn').addEventListener('click', () => {
         if (!audioUnlocked) {
             const ids = ['audio-bgm1', 'audio-bgm2', 'audio-bgm3', 'audio-ui', 'audio-paper', 'audio-metal'];
-            ids.forEach(id => {
-                let el = document.getElementById(id);
-                if(el) { el.volume = 0; let p = el.play(); if(p !== undefined) p.then(() => { el.pause(); el.currentTime = 0; }).catch(e=>console.log(e)); }
-            });
+            ids.forEach(id => { let el = document.getElementById(id); if(el) { el.volume = 0; let p = el.play(); if(p !== undefined) p.then(() => { el.pause(); el.currentTime = 0; }).catch(e=>{}); } });
             audioUnlocked = true;
         }
         document.getElementById('start-screen').style.display = 'none';
         document.getElementById('transition-screen').style.opacity = '0';
         playAudioSafe('audio-door');
-        setTimeout(() => {
-            currentBgmId = 'audio-bgm1';
-            let bgm1 = document.getElementById('audio-bgm1');
-            if(bgm1) { bgm1.volume = 0.5; bgm1.play().catch(e=>console.log(e)); }
-        }, 1500);
+        setTimeout(() => { currentBgmId = 'audio-bgm1'; let bgm1 = document.getElementById('audio-bgm1'); if(bgm1) { bgm1.volume = 0.5; bgm1.play().catch(e=>{}); } }, 1500);
       });
 
       function openPuzzle(num) { if (num !== currentLevel) return; playAudioSafe('audio-ui'); document.getElementById('puzzle-' + num).style.display = 'flex'; }
@@ -285,6 +283,7 @@
         const transScreen = document.getElementById('transition-screen');
         const transText = document.getElementById('trans-text');
         const dynLight = document.getElementById('dynamic-light');
+        const dustFx = document.getElementById('dust-particles');
         
         cancelGaze(); 
         
@@ -305,6 +304,18 @@
               dynLight.setAttribute('color', '#00FFFF');
           } else if (nextLevelNum === 4) {
               dynLight.setAttribute('visible', 'false');
+              dustFx.setAttribute('visible', 'true');
+              const spheres = dustFx.querySelectorAll('a-sphere');
+              spheres.forEach(sphere => {
+                  sphere.setAttribute('color', '#FFD700');
+                  sphere.setAttribute('opacity', '0.8');
+                  sphere.setAttribute('radius', '0.02'); 
+              });
+              
+              setTimeout(() => {
+                  playAudioSafe('audio-ui'); 
+                  document.getElementById('finale-screen').style.display = 'flex';
+              }, 6000);
           }
 
           if(oldHotspotId) {
@@ -339,6 +350,35 @@
       function showMsg(text) { 
           const box = document.getElementById('msg'); box.innerText = text; box.style.display = 'block'; 
           if(currentLevel !== 4) setTimeout(() => { box.style.display = 'none'; }, 3500); 
+      }
+
+      function restartGame() {
+          playAudioSafe('audio-ui');
+          const ids = ['audio-bgm1', 'audio-bgm2', 'audio-bgm3', 'audio-ui', 'audio-door', 'audio-paper', 'audio-metal'];
+          ids.forEach(id => { let el = document.getElementById(id); if(el) { el.pause(); el.currentTime = 0; } });
+          currentBgmId = null; audioUnlocked = false; 
+
+          document.querySelectorAll('.puzzle-overlay').forEach(el => el.style.display = 'none');
+          document.getElementById('game-over-screen').style.display = 'none';
+          document.getElementById('finale-screen').style.display = 'none';
+
+          currentLevel = 1; cancelGaze();
+
+          document.getElementById('main-sky').setAttribute('src', 'room1.jpg');
+          const dynLight = document.getElementById('dynamic-light');
+          dynLight.setAttribute('visible', 'true'); dynLight.setAttribute('color', '#FFAA00');
+          document.getElementById('dust-particles').setAttribute('visible', 'false');
+
+          document.getElementById('hotspot-1').setAttribute('visible', 'true');
+          document.getElementById('hotspot-1').setAttribute('position', '-1 -0.5 -4.8');
+          document.getElementById('hotspot-1').classList.add('interactive');
+
+          ['hotspot-2', 'hotspot-3'].forEach(id => {
+              let el = document.getElementById(id); el.setAttribute('visible', 'false');
+              let clickArea = el.querySelector('a-circle'); if (clickArea) clickArea.classList.remove('interactive');
+          });
+
+          document.getElementById('start-screen').style.display = 'flex';
       }
     </script>
   </body>
