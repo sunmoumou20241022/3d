@@ -51,7 +51,7 @@
   </head>
   <body>
     
-    <!-- 实体化 Audio 资产，强制预加载，防止动态 new Audio 报错 -->
+    <!-- 实体化 Audio 资产，强制预加载 -->
     <div style="display: none;">
       <audio id="audio-bgm1" src="bgm1.mp3" loop preload="auto"></audio>
       <audio id="audio-bgm2" src="bgm2.mp3" loop preload="auto"></audio>
@@ -115,8 +115,8 @@
     <script>
       let currentLevel = 1;
       let currentBgmId = null;
+      let audioUnlocked = false;
 
-      // 工具函数：获取并播放DOM音频
       function playAudioSafe(id, volume = 0.5) {
           let el = document.getElementById(id);
           if(el) {
@@ -124,13 +124,6 @@
               el.volume = volume;
               let p = el.play();
               if(p !== undefined) p.catch(e => console.log('Play blocked:', id, e));
-          }
-      }
-
-      function stopAudio(id) {
-          let el = document.getElementById(id);
-          if(el) {
-              el.pause();
           }
       }
 
@@ -156,23 +149,25 @@
           }, 100);
       }
 
-      // 强力解锁机制
       document.getElementById('start-btn').addEventListener('click', () => {
-        // 瞬间对所有标签执行 play().then(pause) 拿到浏览器的通行证
-        const ids = ['audio-bgm1', 'audio-bgm2', 'audio-bgm3', 'audio-ui', 'audio-door', 'audio-paper', 'audio-metal'];
-        ids.forEach(id => {
-            let el = document.getElementById(id);
-            if(el) {
-                el.volume = 0;
-                let p = el.play();
-                if(p !== undefined) p.then(() => { el.pause(); el.currentTime = 0; }).catch(e=>console.log(e));
-            }
-        });
+        if (!audioUnlocked) {
+            // 【硬核修复】：从解锁池中剔除 'audio-door'，防止异步互斥中断开门声
+            const ids = ['audio-bgm1', 'audio-bgm2', 'audio-bgm3', 'audio-ui', 'audio-paper', 'audio-metal'];
+            ids.forEach(id => {
+                let el = document.getElementById(id);
+                if(el) {
+                    el.volume = 0;
+                    let p = el.play();
+                    if(p !== undefined) p.then(() => { el.pause(); el.currentTime = 0; }).catch(e=>console.log(e));
+                }
+            });
+            audioUnlocked = true;
+        }
 
         document.getElementById('start-screen').style.display = 'none';
         document.getElementById('transition-screen').style.opacity = '0';
         
-        // 【核心修复】：点击瞬间直接发声，不等待任何异步状态
+        // 此刻 audio-door 毫无阻碍地直接利用点击事件获取播放权限
         playAudioSafe('audio-door');
         
         setTimeout(() => {
@@ -213,7 +208,6 @@
         if (result === 'correct') {
           closePuzzle(1);
           closeEasterEgg();
-          // 第一关通关，不用 door 音效，避免和开场重复，直接保持背景音即可
           startTransition('机关轰鸣，天旋地转...', 'room2.jpg', 'hotspot-1', 'hotspot-2', '轰隆隆...\n石壁裂开，你进入了【胡商藏经阁】', 2, null, null);
         } else { showMsg('石壁纹丝不动... (提示：选B)'); }
       }
@@ -222,7 +216,6 @@
         playAudioSafe('audio-ui');
         if (result === 'correct') {
           closePuzzle(2);
-          // 切换到 bgm2.mp3，播放燃烧声
           startTransition('丝帛燃烧，书架缓缓移开...', 'room3.jpg', 'hotspot-2', 'hotspot-3', '你发现了深渊底部的【青铜机关室】！', 3, 'audio-bgm2', 'audio-paper');
         } else { showMsg('口令错误，密卷上的文字变得模糊... (提示：选B)'); }
       }
@@ -231,7 +224,6 @@
         playAudioSafe('audio-ui');
         if (result === 'correct') {
           closePuzzle(3);
-          // 切换到 bgm3.mp3，播放金属齿轮声
           startTransition('青铜巨门缓缓开启，万丈佛光倾泻而出...', 'room4.jpg', 'hotspot-3', null, '震撼！你抵达了终极宝藏：【大唐龙门佛窟】！\n(演示大结局)', 4, 'audio-bgm3', 'audio-metal');
         } else { showMsg('齿轮发出刺耳的摩擦声... (提示：选B)'); }
       }
