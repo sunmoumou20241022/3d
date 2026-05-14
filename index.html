@@ -56,7 +56,7 @@
     <div id="transition-screen"><div id="trans-text" class="transition-text"></div></div>
     <div id="compass">寻龙点穴</div>
 
-    <!-- 第一关：石门 (4个选项) -->
+    <!-- 第一关：石门 -->
     <div id="puzzle-1" class="puzzle-overlay">
       <div id="board-1" class="puzzle-board">
         <div class="close-btn" onclick="closePuzzle(1)">✖</div>
@@ -70,7 +70,7 @@
       </div>
     </div>
 
-    <!-- 第二关：藏经卷轴 (4个选项) -->
+    <!-- 第二关：藏经卷轴 -->
     <div id="puzzle-2" class="puzzle-overlay">
       <div id="board-2" class="puzzle-board">
         <div class="close-btn" onclick="closePuzzle(2)">✖</div>
@@ -115,42 +115,49 @@
          <a-sphere radius="0.08" color="#FFD700" material="emissive: #FFD700; emissiveIntensity: 0.6" opacity="0.6" animation="property: opacity; to: 0.1; dir: alternate; loop: true; dur: 1500"></a-sphere>
       </a-entity>
 
-      <!-- 第三关热区：修复点不动与颜色太亮的问题 -->
+      <!-- 第三关热区：缩小透明热区避免事件穿透，降低发光刺眼度 -->
       <a-entity id="hotspot-3" position="-1.5 0 -3" visible="false">
-         <!-- 彻底扩大透明点击区域，让评委随便一点就能触发 -->
-         <a-circle class="interactive" radius="2.0" opacity="0" onclick="openPuzzle(3)"></a-circle>
-         <!-- 颜色改为深青色，发光强度大幅调暗，呈现神秘的青铜光泽 -->
-         <a-sphere radius="0.08" color="#005555" material="emissive: #005555; emissiveIntensity: 0.2" opacity="0.5" animation="property: opacity; to: 0.1; dir: alternate; loop: true; dur: 2000"></a-sphere>
+         <a-circle class="interactive" radius="1.2" opacity="0" onclick="openPuzzle(3)"></a-circle>
+         <a-sphere radius="0.08" color="#005555" material="emissive: #005555; emissiveIntensity: 0.3" opacity="0.5" animation="property: opacity; to: 0.1; dir: alternate; loop: true; dur: 2000"></a-sphere>
       </a-entity>
 
     </a-scene>
 
     <script>
-      function openPuzzle(num) { document.getElementById('puzzle-' + num).style.display = 'flex'; }
+      // 引入全局状态锁，防御射线事件穿透导致跳关
+      let currentLevel = 1;
+
+      function openPuzzle(num) { 
+        // 状态锁校验，拒绝越权调用
+        if (num !== currentLevel) return;
+        document.getElementById('puzzle-' + num).style.display = 'flex'; 
+      }
       function closePuzzle(num) { document.getElementById('puzzle-' + num).style.display = 'none'; }
 
       function checkAnswer1(result) {
         if (result === 'correct') {
           closePuzzle(1);
-          startTransition('机关轰鸣，天旋地转...', 'room2.jpg', 'hotspot-1', 'hotspot-2', '轰隆隆...\n石壁裂开，你进入了【胡商藏经阁】');
+          startTransition('机关轰鸣，天旋地转...', 'room2.jpg', 'hotspot-1', 'hotspot-2', '轰隆隆...\n石壁裂开，你进入了【胡商藏经阁】', 2);
         } else { showMsg('石壁纹丝不动... (提示：选B)'); }
       }
 
       function checkAnswer2(result) {
         if (result === 'correct') {
           closePuzzle(2);
-          startTransition('丝帛燃烧，书架缓缓移开...', 'room3.jpg', 'hotspot-2', 'hotspot-3', '你发现了深渊底部的【青铜机关室】！');
+          startTransition('丝帛燃烧，书架缓缓移开...', 'room3.jpg', 'hotspot-2', 'hotspot-3', '你发现了深渊底部的【青铜机关室】！', 3);
         } else { showMsg('口令错误，密卷上的文字变得模糊... (提示：选B)'); }
       }
 
       function checkAnswer3(result) {
         if (result === 'correct') {
           closePuzzle(3);
-          startTransition('青铜巨门缓缓开启，佛光普照...', 'room4.jpg', 'hotspot-3', null, '震撼！你抵达了终极宝藏：【终极佛窟】！');
+          // 终极转场：不强行加载缺失的 room4.jpg，通过 null 参数原地保留，渲染大结局提示
+          startTransition('青铜巨门缓缓开启，佛光普照...', null, 'hotspot-3', null, '震撼！你抵达了终极宝藏：【终极佛窟】！\n(演示大结局)', 4);
         } else { showMsg('齿轮发出刺耳的摩擦声... (提示：选B)'); }
       }
 
-      function startTransition(transTextMsg, nextImageId, oldHotspotId, newHotspotId, successMsg) {
+      // 转场状态机：更新 nextLevelNum
+      function startTransition(transTextMsg, nextImageId, oldHotspotId, newHotspotId, successMsg, nextLevelNum) {
         const transScreen = document.getElementById('transition-screen');
         const transText = document.getElementById('trans-text');
         
@@ -158,30 +165,32 @@
         transScreen.style.opacity = '1';
         transScreen.style.pointerEvents = 'auto'; 
         
+        // 挂载锁定态，转移控制权
+        currentLevel = -1; 
+
         setTimeout(() => { transText.style.opacity = '1'; }, 800);
 
         setTimeout(() => {
-          document.getElementById('main-sky').setAttribute('src', nextImageId); 
+          if(nextImageId) {
+             document.getElementById('main-sky').setAttribute('src', nextImageId); 
+          }
           
           if(oldHotspotId) {
             let oldEl = document.getElementById(oldHotspotId);
             oldEl.setAttribute('visible', 'false');
             oldEl.setAttribute('position', '0 -1000 0'); 
             oldEl.classList.remove('interactive'); 
-            let child = oldEl.querySelector('.interactive');
-            if(child) child.classList.remove('interactive');
           }
 
           if(newHotspotId) {
             let newEl = document.getElementById(newHotspotId);
             newEl.setAttribute('visible', 'true');
-            
-            // 核心修复 Raycaster 点不动的问题：强制重绘后再添加交互类，激活热区！
+            // 防御 Ghost Click: 等待渲染与事件流清空后，重构相交对象列表
             setTimeout(() => { 
               let clickArea = newEl.querySelector('a-circle');
               if(clickArea) {
                   clickArea.classList.remove('interactive');
-                  void clickArea.offsetWidth; // 触发重绘
+                  void clickArea.offsetWidth; 
                   clickArea.classList.add('interactive'); 
               }
             }, 150);
@@ -192,11 +201,27 @@
           transText.style.opacity = '0';
           transScreen.style.opacity = '0';
           transScreen.style.pointerEvents = 'none'; 
+          
+          // 释放状态机到目标级
+          currentLevel = nextLevelNum;
+          
+          if (currentLevel === 4) {
+             document.getElementById('msg').style.background = 'rgba(212, 175, 55, 0.9)';
+             document.getElementById('msg').style.color = '#000';
+          }
+          
           setTimeout(() => { showMsg(successMsg); }, 1500);
         }, 4000);
       }
 
-      function showMsg(text) { const box = document.getElementById('msg'); box.innerText = text; box.style.display = 'block'; setTimeout(() => { box.style.display = 'none'; }, 3500); }
+      function showMsg(text) { 
+          const box = document.getElementById('msg'); 
+          box.innerText = text; 
+          box.style.display = 'block'; 
+          if(currentLevel !== 4) {
+              setTimeout(() => { box.style.display = 'none'; }, 3500); 
+          }
+      }
     </script>
   </body>
 </html>
