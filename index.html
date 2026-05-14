@@ -2,60 +2,127 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>寻宝洛阳 - 连环密室：大升级稳定版</title>
+    <title>寻宝洛阳 - 连环密室</title>
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <style>
-      #ui { position: absolute; top: 15%; left: 50%; transform: translateX(-50%); z-index: 10; color: #fff; text-align: center; font-family: '楷体', sans-serif; pointer-events: none; width: 85%;}
-      .msg-box { background: rgba(15, 8, 3, 0.9); padding: 25px; border-radius: 10px; display: none; pointer-events: auto; font-size: 24px; border: 2px solid #d4af37; box-shadow: 0 0 20px #d4af37; text-shadow: 1px 1px 2px black; line-height: 1.5;}
-      #inventory { position: absolute; bottom: 20px; left: 20px; z-index: 10; color: #d4af37; font-size: 20px; font-weight: bold; background: rgba(0,0,0,0.6); padding: 12px; border: 1px solid #d4af37; border-radius: 6px;}
+      /* 全局字体和基础UI */
+      body { font-family: '楷体', 'STKaiti', serif; }
+      
+      /* 顶部提示框 */
+      #ui { position: absolute; top: 15%; left: 50%; transform: translateX(-50%); z-index: 10; color: #fff; text-align: center; width: 85%; pointer-events: none; }
+      .msg-box { background: rgba(15, 8, 3, 0.9); padding: 20px; border-radius: 8px; display: none; font-size: 22px; border: 2px solid #d4af37; box-shadow: 0 0 20px #d4af37; text-shadow: 1px 1px 2px black; line-height: 1.5;}
+      
+      /* ================= 核心：古风解谜全屏弹窗 ================= */
+      #puzzle-overlay {
+        display: none; /* 默认隐藏 */
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.85); /* 半透明黑底，遮盖3D场景 */
+        z-index: 999; /* 置于最顶层 */
+        display: none; flex-direction: column; align-items: center; justify-content: center;
+      }
+      
+      /* 解谜面板底板 */
+      .puzzle-board {
+        background: #2c1e16; /* 深木色 */
+        border: 3px solid #d4af37;
+        border-radius: 12px;
+        padding: 30px;
+        text-align: center;
+        max-width: 80%;
+        box-shadow: 0 0 40px #000, inset 0 0 20px #000;
+        position: relative;
+      }
+
+      /* 面板标题 */
+      .puzzle-title { color: #d4af37; font-size: 28px; margin-bottom: 15px; font-weight: bold; letter-spacing: 2px; }
+      /* 面板描述 */
+      .puzzle-desc { color: #eeddcc; font-size: 18px; margin-bottom: 20px; line-height: 1.6; }
+      
+      /* 你的高清玉牌图片 */
+      .puzzle-img { width: 220px; margin-bottom: 25px; filter: drop-shadow(0px 10px 10px rgba(0,0,0,0.8)); }
+
+      /* 古风按钮 */
+      .ancient-btn {
+        background: linear-gradient(180deg, #5c3a21 0%, #3a2211 100%);
+        border: 2px solid #d4af37;
+        color: #d4af37;
+        padding: 12px 30px;
+        font-size: 22px;
+        font-family: '楷体', 'STKaiti', serif;
+        border-radius: 5px;
+        cursor: pointer;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+      }
+      .ancient-btn:active { transform: translateY(2px); box-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+      
+      /* 关闭按钮 (右上角X) */
+      .close-btn { position: absolute; top: 10px; right: 15px; color: #d4af37; font-size: 24px; cursor: pointer; font-family: sans-serif; }
     </style>
   </head>
   <body>
+    
     <div id="ui"><div id="msg" class="msg-box"></div></div>
-    <div id="inventory">背包：空空如也</div>
+
+    <div id="puzzle-overlay">
+      <div class="puzzle-board">
+        <div class="close-btn" onclick="closePuzzle()">✖</div>
+        <div class="puzzle-title">神秘的青石门</div>
+        <div class="puzzle-desc">
+          你在乱石中发现了一处暗门，门上有一个龙形的凹槽。<br>
+          你拿出刚才捡到的那块玉牌...
+        </div>
+        <img class="puzzle-img" src="tablet.png" alt="龙纹玉牌">
+        <br>
+        <button class="ancient-btn" onclick="solvePuzzle()">将玉牌嵌入凹槽</button>
+      </div>
+    </div>
 
     <a-scene>
       <a-sky id="main-sky" src="room1.jpg" rotation="0 -90 0"></a-sky>
 
       <a-entity camera look-controls>
-        <a-cursor fuse="true" fuse-timeout="1500" raycaster="objects: .interactive" color="#d4af37"></a-cursor>
+        <a-cursor fuse="true" fuse-timeout="1200" raycaster="objects: .interactive" color="#d4af37"></a-cursor>
       </a-entity>
       
-      <a-image id="jade" class="interactive" src="tablet.png" crossOrigin="anonymous" 
-               position="2.5 -1.2 -3.5" rotation="-15 45 0" scale="0.8 0.8 0.8"
-               animation="property: scale; dir: alternate; dur: 1200; to: 0.9 0.9 0.9; loop: true"
-               animation__rotation="property: rotation; to: -15 405 0; dur: 10000; loop: true; easing: linear"
-               onclick="collectJade()"></a-image>
-
-      <a-torus id="shrine" class="interactive" position="-1 0.2 -4.8" radius="0.25" radius-tubular="0.03" color="#8b4513" opacity="0.8"
-               animation="property: rotation; to: 360 360 0; dur: 5000; loop: true; easing: linear"
-                   onclick="tryPlaceJade()"></a-torus>
-
-      <a-circle id="door" position="-1 -0.5 -4.8" radius="0.5" color="#00FFFF" opacity="0.01" rotation="-90 0 0" visible="false"></a-circle>
-
+      <a-circle id="hotspot" class="interactive" position="-1 -0.5 -4.8" radius="0.8" color="#FFD700" opacity="0.1"
+                animation="property: opacity; to: 0.3; dir: alternate; loop: true; dur: 1500"
+                onclick="openPuzzle()"></a-circle>
     </a-scene>
 
     <script>
-      let hasJade = false; let isShrineActivated = false;
-      function collectJade() {
-        if(!hasJade) {
-          hasJade = true; document.querySelector('#jade').setAttribute('visible', 'false'); document.querySelector('#jade').classList.remove('interactive');
-          showMsg('获得线索：【透雕龙纹玉牌】！\n似乎可以和那个神秘神龛匹配。');
-          document.querySelector('#inventory').innerText = '背包：【透雕龙纹玉牌】';
-          document.querySelector('#shrine').setAttribute('color', '#FFD700');
-        }
+      // 打开解谜面板
+      function openPuzzle() {
+        document.getElementById('puzzle-overlay').style.display = 'flex';
       }
-      function tryPlaceJade() {
-        if(isShrineActivated) return;
-        if(hasJade) {
-          isShrineActivated = true; document.querySelector('#shrine').setAttribute('material', 'emissive', '#FFD700');
-          document.querySelector('#inventory').innerText = '背包：空空如也';
-          showMsg('咔哒...\n玉牌严丝合缝嵌入凹槽，石壁震动，传送法阵显现！');
-          const door = document.querySelector('#door'); door.setAttribute('visible', 'true'); door.setAttribute('opacity', '0.6'); door.classList.add('interactive'); door.setAttribute('onclick', "teleportToRoom2()");
-        } else { showMsg('神龛凹槽深不见底，似乎在等待某种特定图案的玉器...'); }
+
+      // 关闭解谜面板
+      function closePuzzle() {
+        document.getElementById('puzzle-overlay').style.display = 'none';
       }
-      function teleportToRoom2() { document.querySelector('#main-sky').setAttribute('src', 'room2.jpg'); document.querySelector('#shrine').setAttribute('visible', 'false'); document.querySelector('#door').setAttribute('visible', 'false'); showMsg('进入了【胡商藏经阁】'); }
-      function showMsg(text) { const box = document.querySelector('#msg'); box.innerText = text; box.style.display = 'block'; setTimeout(() => { box.style.display = 'none'; }, 4500); }
+
+      // 解谜成功，切入第二关！
+      function solvePuzzle() {
+        // 1. 关闭面板
+        closePuzzle();
+        
+        // 2. 隐藏第一关的热区，防止重复点击
+        document.getElementById('hotspot').setAttribute('visible', 'false');
+        document.getElementById('hotspot').classList.remove('interactive');
+        
+        // 3. 切换背景图到第二关
+        document.getElementById('main-sky').setAttribute('src', 'room2.jpg'); 
+        
+        // 4. 弹出通关提示
+        showMsg('轰隆隆...\n石门缓缓开启！\n你成功进入了【胡商藏经阁】');
+      }
+
+      // 顶部消息框逻辑
+      function showMsg(text) { 
+        const box = document.getElementById('msg'); 
+        box.innerText = text; 
+        box.style.display = 'block'; 
+        setTimeout(() => { box.style.display = 'none'; }, 4500); 
+      }
     </script>
   </body>
 </html>
