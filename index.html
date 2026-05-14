@@ -2,10 +2,10 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>寻宝洛阳 - 终极闭环版</title>
+    <title>寻宝洛阳 - 视听沉浸版</title>
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <style>
-      body { font-family: '楷体', 'STKaiti', serif; margin: 0; overflow: hidden; }
+      body { font-family: '楷体', 'STKaiti', serif; margin: 0; overflow: hidden; background: #000; }
       #ui { position: absolute; top: 10%; left: 50%; transform: translateX(-50%); z-index: 10; color: #fff; text-align: center; width: 90%; pointer-events: none; }
       .msg-box { background: rgba(15, 8, 3, 0.9); padding: 15px 25px; border-radius: 8px; display: none; font-size: 20px; border: 1px solid #d4af37; box-shadow: 0 0 15px #d4af37;}
       
@@ -45,69 +45,85 @@
       #board-3 .option-btn:hover { background: #5f9ea0; color: #fff; }
       #board-3 .close-btn { color: #5f9ea0; }
 
-      #transition-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 1.5s ease-in-out; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+      /* ================= 新增：彩蛋图鉴 UI ================= */
+      #easter-egg-ui {
+        background: url('https://www.transparenttextures.com/patterns/aged-paper.png'), #d2b48c;
+        border: 2px solid #5c3a21;
+        box-shadow: 0 0 40px rgba(0,0,0,0.8);
+      }
+      #easter-egg-ui .puzzle-title { color: #5c3a21; border-bottom: 1px solid #5c3a21; font-size: 22px; }
+      #easter-egg-ui .poem-desc { color: #333; font-size: 16px; text-align: left; line-height: 1.8; font-family: '宋体', serif; }
+
+      #transition-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 1000; opacity: 1; pointer-events: none; transition: opacity 1.5s ease-in-out; display: flex; flex-direction: column; align-items: center; justify-content: center; }
       .transition-text { color: #d4af37; font-size: 24px; letter-spacing: 5px; opacity: 0; transition: opacity 1s ease-in-out; text-shadow: 0 0 10px #d4af37;}
       #compass { position: absolute; bottom: 30px; left: 30px; z-index: 10; color: #d4af37; font-size: 16px; width: 60px; height: 60px; border: 1px solid #d4af37; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.4); }
+      
+      /* 进入游戏按钮 (由于浏览器限制，必须用户点击才能播放音乐) */
+      #start-btn { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 15px 40px; font-size: 24px; background: transparent; color: #d4af37; border: 2px solid #d4af37; cursor: pointer; z-index: 1001; font-family: '楷体'; border-radius: 5px; }
     </style>
   </head>
   <body>
     
+    <button id="start-btn" onclick="startGame()">触碰石门，进入洛阳地宫</button>
+
     <div id="ui"><div id="msg" class="msg-box"></div></div>
     <div id="transition-screen"><div id="trans-text" class="transition-text"></div></div>
     <div id="compass">寻龙点穴</div>
 
-    <!-- 第一关：石门 -->
-    <div id="puzzle-1" class="puzzle-overlay">
-      <div id="board-1" class="puzzle-board">
-        <div class="close-btn" onclick="closePuzzle(1)">✖</div>
-        <div class="puzzle-title">龙纹石门机关</div>
-        <div class="poem-desc">你在暗道尽头的石壁上发现了一个凹槽，须对出暗号：</div>
-        <div class="poem-text">“洛阳亲友如相问，<br>_____________。”</div>
-        <button class="option-btn" onclick="checkAnswer1('wrong')">A. 不及汪伦送我情</button>
-        <button class="option-btn" onclick="checkAnswer1('correct')">B. 一片冰心在玉壶</button>
-        <button class="option-btn" onclick="checkAnswer1('wrong')">C. 孤帆远影碧空尽</button>
-        <button class="option-btn" onclick="checkAnswer1('wrong')">D. 天涯若比邻</button>
-      </div>
-    </div>
+    <!-- 题目弹窗... (省略123关内容，保持不变以节省空间) -->
+    <div id="puzzle-1" class="puzzle-overlay"><div id="board-1" class="puzzle-board"><div class="close-btn" onclick="closePuzzle(1)">✖</div><div class="puzzle-title">龙纹石门机关</div><div class="poem-desc">暗道尽头的凹槽，须对出暗号：</div><div class="poem-text">“洛阳亲友如相问，<br>_____________。”</div><button class="option-btn" onclick="checkAnswer1('wrong')">A. 不及汪伦送我情</button><button class="option-btn" onclick="checkAnswer1('correct')">B. 一片冰心在玉壶</button><button class="option-btn" onclick="checkAnswer1('wrong')">C. 孤帆远影碧空尽</button><button class="option-btn" onclick="checkAnswer1('wrong')">D. 天涯若比邻</button></div></div>
+    <div id="puzzle-2" class="puzzle-overlay"><div id="board-2" class="puzzle-board"><div class="close-btn" onclick="closePuzzle(2)">✖</div><div class="puzzle-title">西域商路密卷</div><div class="poem-desc">唯有对出口令方可开启密道：</div><div class="poem-text">“劝君更尽一杯酒，<br>西出____无故人。”</div><button class="option-btn" onclick="checkAnswer2('wrong')">A. 雁门</button><button class="option-btn" onclick="checkAnswer2('correct')">B. 阳关</button><button class="option-btn" onclick="checkAnswer2('wrong')">C. 玉门</button><button class="option-btn" onclick="checkAnswer2('wrong')">D. 楼兰</button></div></div>
+    <div id="puzzle-3" class="puzzle-overlay"><div id="board-3" class="puzzle-board"><div class="close-btn" onclick="closePuzzle(3)">✖</div><div class="puzzle-title">青铜八卦锁</div><div class="poem-desc">破解天干之谜以倒转齿轮：</div><div class="poem-text">“天干地支中，‘甲’对应的五行是？”</div><button class="option-btn" onclick="checkAnswer3('wrong')">A. 金</button><button class="option-btn" onclick="checkAnswer3('correct')">B. 木</button><button class="option-btn" onclick="checkAnswer3('wrong')">C. 水</button><button class="option-btn" onclick="checkAnswer3('wrong')">D. 火</button></div></div>
 
-    <!-- 第二关：藏经卷轴 -->
-    <div id="puzzle-2" class="puzzle-overlay">
-      <div id="board-2" class="puzzle-board">
-        <div class="close-btn" onclick="closePuzzle(2)">✖</div>
-        <div class="puzzle-title">西域商路密卷</div>
-        <div class="poem-desc">书架深处的丝帛写着大唐西域商会的机密口令，唯有对出方可开启密道：</div>
-        <div class="poem-text">“劝君更尽一杯酒，<br>西出____无故人。”</div>
-        <button class="option-btn" onclick="checkAnswer2('wrong')">A. 雁门</button>
-        <button class="option-btn" onclick="checkAnswer2('correct')">B. 阳关</button>
-        <button class="option-btn" onclick="checkAnswer2('wrong')">C. 玉门</button>
-        <button class="option-btn" onclick="checkAnswer2('wrong')">D. 楼兰</button>
-      </div>
-    </div>
-
-    <!-- 第三关：青铜八卦 -->
-    <div id="puzzle-3" class="puzzle-overlay">
-      <div id="board-3" class="puzzle-board">
-        <div class="close-btn" onclick="closePuzzle(3)">✖</div>
-        <div class="puzzle-title">青铜八卦锁</div>
-        <div class="poem-desc">巨大的青铜齿轮卡死，若要齿轮倒转开启佛窟，需破解天干之谜：</div>
-        <div class="poem-text">“天干地支中，‘甲’对应的五行是？”</div>
-        <button class="option-btn" onclick="checkAnswer3('wrong')">A. 金</button>
-        <button class="option-btn" onclick="checkAnswer3('correct')">B. 木</button>
-        <button class="option-btn" onclick="checkAnswer3('wrong')">C. 水</button>
-        <button class="option-btn" onclick="checkAnswer3('wrong')">D. 火</button>
+    <!-- ================= 彩蛋图鉴 UI ================= -->
+    <div id="easter-egg-panel" class="puzzle-overlay">
+      <div id="easter-egg-ui" class="puzzle-board">
+        <div class="close-btn" onclick="closeEasterEgg()">✖</div>
+        <div class="puzzle-title">【风物志】三彩陶片</div>
+        <div class="poem-desc">
+          你在碎石下摸到一块温润的残片。拂去灰尘，釉色依旧鲜亮。<br><br>
+          这是唐代洛阳窑烧制的黄绿白三彩。当年西域的胡商将丝绸、香料运入神都，又将这绚丽的陶器驼回波斯。<br><br>
+          它碎在了地宫里，主人大概再也没能踏上归乡的沙丘。
+        </div>
       </div>
     </div>
 
     <!-- 3D 场景 -->
     <a-scene renderer="colorManagement: true; antialias: true;">
+      
+      <!-- 音频资产 -->
+      <a-assets>
+        <audio id="bgm-tomb" src="bgm1.mp3" preload="auto" loop="true"></audio>
+        <audio id="bgm-silk" src="bgm2.mp3" preload="auto" loop="true"></audio>
+        <audio id="bgm-buddha" src="bgm3.mp3" preload="auto" loop="true"></audio>
+      </a-assets>
+
+      <!-- 全局环境音效播放器 -->
+      <a-sound id="ambient-bgm" src="#bgm-tomb" volume="0.6" position="0 2 0"></a-sound>
+
       <a-sky id="main-sky" src="room1.jpg" rotation="0 -90 0"></a-sky>
 
       <a-entity camera look-controls="pointerLockEnabled: false;">
         <a-cursor cursor="rayOrigin: mouse" raycaster="objects: .interactive" color="#fff" radius-inner="0.01" radius-outer="0.02"></a-cursor>
       </a-entity>
+
+      <!-- ================= 视觉特效 B：动态光影 (关卡1-3使用) ================= -->
+      <!-- 模拟摇曳的火光/机关微光，通过改变强度营造氛围 -->
+      <a-light id="dynamic-light" type="point" color="#FFAA00" position="0 1 -2" intensity="0.6" 
+               animation="property: intensity; to: 0.3; dir: alternate; loop: true; dur: 800"></a-light>
       
-      <!-- 热区设置 -->
+      <!-- ================= 视觉特效 A：悬浮尘埃 (关卡4专属) ================= -->
+      <a-entity id="dust-particles" visible="false">
+         <a-sphere radius="0.02" color="#FFF" material="emissive: #FFF; emissiveIntensity: 0.8" opacity="0.6" position="-1 1 -2" animation="property: position; to: -1 1.5 -2; dir: alternate; loop: true; dur: 4000; easing: easeInOutSine"></a-sphere>
+         <a-sphere radius="0.015" color="#FFD700" material="emissive: #FFD700; emissiveIntensity: 0.5" opacity="0.4" position="1.5 0.5 -1.5" animation="property: position; to: 1.5 1 -1.5; dir: alternate; loop: true; dur: 3500; easing: easeInOutSine"></a-sphere>
+         <a-sphere radius="0.025" color="#FFF" material="emissive: #FFF; emissiveIntensity: 0.6" opacity="0.5" position="0 2 -3" animation="property: position; to: 0 1 -3; dir: alternate; loop: true; dur: 5000; easing: easeInOutSine"></a-sphere>
+      </a-entity>
+
+      <!-- 热区 -->
       <a-circle id="hotspot-1" class="interactive" position="-1 -0.5 -4.8" radius="1.5" opacity="0" onclick="openPuzzle(1)"></a-circle>
+      
+      <!-- ================= 隐藏彩蛋热区 (藏在第一关左侧脚下) ================= -->
+      <a-sphere id="hotspot-egg" class="interactive" radius="0.05" position="-2 -1.5 -2" color="#447744" material="emissive: #447744; emissiveIntensity: 0.4" animation="property: opacity; to: 0.2; dir: alternate; loop: true; dur: 1000" onclick="openEasterEgg()"></a-sphere>
 
       <a-entity id="hotspot-2" position="3 0 -2" visible="false">
          <a-circle class="interactive" radius="1.5" opacity="0" onclick="openPuzzle(2)"></a-circle>
@@ -121,61 +137,94 @@
     </a-scene>
 
     <script>
-      // 状态锁：确保不会发生射线穿透导致的跳关
       let currentLevel = 1;
+      const bgmPlayer = document.getElementById('ambient-bgm');
 
-      function openPuzzle(num) { 
-        if (num !== currentLevel) return;
-        document.getElementById('puzzle-' + num).style.display = 'flex'; 
+      // 初始化游戏，解开音频限制
+      function startGame() {
+        document.getElementById('start-btn').style.display = 'none';
+        document.getElementById('transition-screen').style.opacity = '0';
+        bgmPlayer.components.sound.playSound(); // 播放古墓BGM
       }
+
+      function openPuzzle(num) { if (num === currentLevel) document.getElementById('puzzle-' + num).style.display = 'flex'; }
       function closePuzzle(num) { document.getElementById('puzzle-' + num).style.display = 'none'; }
+      
+      // 彩蛋逻辑
+      function openEasterEgg() { 
+          if(currentLevel === 1) document.getElementById('easter-egg-panel').style.display = 'flex'; 
+      }
+      function closeEasterEgg() { 
+          document.getElementById('easter-egg-panel').style.display = 'none'; 
+          document.getElementById('hotspot-egg').setAttribute('visible', 'false'); // 拿过就消失
+          document.getElementById('hotspot-egg').classList.remove('interactive');
+      }
 
       function checkAnswer1(result) {
         if (result === 'correct') {
           closePuzzle(1);
-          startTransition('机关轰鸣，天旋地转...', 'room2.jpg', 'hotspot-1', 'hotspot-2', '轰隆隆...\n石壁裂开，你进入了【胡商藏经阁】', 2);
+          // 过关后销毁彩蛋（如果没点的话）
+          closeEasterEgg();
+          // 第一关到第二关，BGM不变（还是选项A）
+          startTransition('机关轰鸣，天旋地转...', 'room2.jpg', 'hotspot-1', 'hotspot-2', '轰隆隆...\n石壁裂开，你进入了【胡商藏经阁】', 2, '#bgm-tomb');
         } else { showMsg('石壁纹丝不动... (提示：选B)'); }
       }
 
       function checkAnswer2(result) {
         if (result === 'correct') {
           closePuzzle(2);
-          startTransition('丝帛燃烧，书架缓缓移开...', 'room3.jpg', 'hotspot-2', 'hotspot-3', '你发现了深渊底部的【青铜机关室】！', 3);
+          // 第二关到第三关，BGM切换到选项B (西域风)，特效保持动态光
+          startTransition('丝帛燃烧，书架缓缓移开...', 'room3.jpg', 'hotspot-2', 'hotspot-3', '你发现了深渊底部的【青铜机关室】！', 3, '#bgm-silk');
         } else { showMsg('口令错误，密卷上的文字变得模糊... (提示：选B)'); }
       }
 
       function checkAnswer3(result) {
         if (result === 'correct') {
           closePuzzle(3);
-          // 最终转场：加载 room4.jpg，移除所有交互，展示结局
-          startTransition('青铜巨门缓缓开启，万丈佛光倾泻而出...', 'room4.jpg', 'hotspot-3', null, '震撼！你抵达了终极宝藏：【大唐龙门佛窟】！\n(演示大结局)', 4);
+          // 最终转场：BGM切换到选项C (梵音)，关闭动态光，开启粒子尘埃特效！
+          startTransition('青铜巨门缓缓开启，万丈佛光倾泻而出...', 'room4.jpg', 'hotspot-3', null, '震撼！你抵达了终极宝藏：【大唐龙门佛窟】！\n(演示大结局)', 4, '#bgm-buddha');
         } else { showMsg('齿轮发出刺耳的摩擦声... (提示：选B)'); }
       }
 
-      function startTransition(transTextMsg, nextImageId, oldHotspotId, newHotspotId, successMsg, nextLevelNum) {
+      function startTransition(transTextMsg, nextImageId, oldHotspotId, newHotspotId, successMsg, nextLevelNum, nextBgmTarget) {
         const transScreen = document.getElementById('transition-screen');
         const transText = document.getElementById('trans-text');
+        const dynLight = document.getElementById('dynamic-light');
+        const dustFx = document.getElementById('dust-particles');
         
         transText.innerText = transTextMsg; 
         transScreen.style.opacity = '1';
         transScreen.style.pointerEvents = 'auto'; 
         
-        currentLevel = -1; // 锁定状态
+        currentLevel = -1; 
 
         setTimeout(() => { transText.style.opacity = '1'; }, 800);
 
         setTimeout(() => {
-          if(nextImageId) {
-             document.getElementById('main-sky').setAttribute('src', nextImageId); 
-          }
+          if(nextImageId) document.getElementById('main-sky').setAttribute('src', nextImageId); 
           
+          // 切歌逻辑
+          if (nextBgmTarget) {
+              bgmPlayer.components.sound.stopSound();
+              bgmPlayer.setAttribute('src', nextBgmTarget);
+              bgmPlayer.components.sound.playSound();
+          }
+
+          // 视觉特效控制逻辑
+          if (nextLevelNum === 3) {
+              // 第三关：青铜光泽
+              dynLight.setAttribute('color', '#00FFFF');
+          } else if (nextLevelNum === 4) {
+              // 第四关：关掉点光源，打开浮空尘埃
+              dynLight.setAttribute('visible', 'false');
+              dustFx.setAttribute('visible', 'true');
+          }
+
           if(oldHotspotId) {
             let oldEl = document.getElementById(oldHotspotId);
             oldEl.setAttribute('visible', 'false');
             oldEl.setAttribute('position', '0 -1000 0'); 
             oldEl.classList.remove('interactive'); 
-            let child = oldEl.querySelector('.interactive');
-            if(child) child.classList.remove('interactive');
           }
 
           if(newHotspotId) {
@@ -198,23 +247,18 @@
           transScreen.style.pointerEvents = 'none'; 
           
           currentLevel = nextLevelNum;
-          
           if (currentLevel === 4) {
              document.getElementById('msg').style.background = 'rgba(212, 175, 55, 0.9)';
              document.getElementById('msg').style.color = '#000';
           }
-          
           setTimeout(() => { showMsg(successMsg); }, 1500);
         }, 4000);
       }
 
       function showMsg(text) { 
           const box = document.getElementById('msg'); 
-          box.innerText = text; 
-          box.style.display = 'block'; 
-          if(currentLevel !== 4) {
-              setTimeout(() => { box.style.display = 'none'; }, 3500); 
-          }
+          box.innerText = text; box.style.display = 'block'; 
+          if(currentLevel !== 4) setTimeout(() => { box.style.display = 'none'; }, 3500); 
       }
     </script>
   </body>
