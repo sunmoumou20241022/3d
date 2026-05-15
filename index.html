@@ -2,9 +2,8 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <!-- 【核心载荷 1】：强制移动端视口规约，禁止用户缩放，适配刘海屏，确保 UI 比例锁定 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>寻宝洛阳 - 全平台兼容完全体</title>
+    <title>寻宝洛阳 - PC沉浸版完全体</title>
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <style>
       body { font-family: '楷体', 'STKaiti', serif; margin: 0; overflow: hidden; background: #000; touch-action: none; }
@@ -12,7 +11,10 @@
       .msg-box { background: rgba(15, 8, 3, 0.9); padding: 15px 25px; border-radius: 8px; display: none; font-size: 20px; border: 1px solid #d4af37; box-shadow: 0 0 15px #d4af37;}
       
       .puzzle-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 999; flex-direction: column; align-items: center; justify-content: center; }
-      .puzzle-board { border-radius: 10px; padding: 25px; text-align: center; width: 85%; max-width: 500px; position: relative; box-sizing: border-box; }
+      
+      /* 针对 PC 宽屏优化的面板尺寸限制 */
+      .puzzle-board { border-radius: 10px; padding: 25px; text-align: center; width: 85%; max-width: 650px; position: relative; box-sizing: border-box; }
+      
       .puzzle-title { font-size: 24px; margin-bottom: 12px; font-weight: bold; padding-bottom: 8px; letter-spacing: 2px;}
       .poem-text { font-size: 20px; text-align: center; margin: 15px 0; letter-spacing: 2px; font-weight: bold; line-height: 1.4;}
       .poem-desc { font-size: 16px; margin-bottom: 20px; line-height: 1.5;}
@@ -58,7 +60,8 @@
       .death-sub { font-size: 18px; color: #555; letter-spacing: 2px; }
       @keyframes fadeBlood { 0% { opacity: 0; transform: scale(0.9); } 50% { opacity: 1; transform: scale(1); } 100% { opacity: 1; transform: scale(1); } }
 
-      #secret-panel { background: #222; border: 2px solid #d4af37; box-shadow: 0 0 50px rgba(212, 175, 55, 0.4); max-width: 90%; padding: 15px; max-height: 80vh; overflow-y: auto;}
+      /* PC 端彩蛋面板宽度限制 */
+      #secret-panel { background: #222; border: 2px solid #d4af37; box-shadow: 0 0 50px rgba(212, 175, 55, 0.4); width: 85%; max-width: 650px; padding: 15px; max-height: 80vh; overflow-y: auto;}
       .secret-announcement { color: #ffeb3b; font-size: 22px; margin-bottom: 15px; font-weight: bold; text-shadow: 0 0 10px #ffeb3b; }
       .secret-content img { max-width: 100%; max-height: 200px; border-radius: 5px; border: 1px solid #555; margin-bottom: 15px; }
       .secret-title { color: #d4af37; font-size: 20px; margin-bottom: 10px; }
@@ -69,16 +72,6 @@
     </style>
   </head>
   <body>
-    
-    <div style="display: none;">
-      <audio id="audio-bgm1" src="bgm1.mp3" loop preload="auto"></audio>
-      <audio id="audio-bgm2" src="bgm2.mp3" loop preload="auto"></audio>
-      <audio id="audio-bgm3" src="bgm3.mp3" loop preload="auto"></audio>
-      <audio id="audio-ui" src="ui.mp3" preload="auto"></audio>
-      <audio id="audio-door" src="door.mp3" preload="auto"></audio>
-      <audio id="audio-paper" src="paper.mp3" preload="auto"></audio>
-      <audio id="audio-metal" src="metal.mp3" preload="auto"></audio>
-    </div>
 
     <div id="start-screen">
       <div class="game-title">寻宝洛阳</div>
@@ -92,9 +85,8 @@
       </div>
     </div>
     
-    <!-- 移动端适配的双轨按钮面板 -->
     <div id="finale-screen" class="puzzle-overlay" style="background: rgba(10, 5, 0, 0.9);">
-      <div class="puzzle-board" style="background: transparent; border: none; box-shadow: none; width: 95%; max-width: 600px;">
+      <div class="puzzle-board" style="background: transparent; border: none; box-shadow: none; width: 95%; max-width: 800px;">
         <div class="death-main" style="color: #FFD700; text-shadow: 0 0 30px #FFD700, 0 0 10px #FFF; font-size: 32px;">寻宝圆满，名留青史</div>
         <div class="death-sub" style="color: #EEDDCC; font-size: 16px; line-height: 1.6; margin-bottom: 30px;">
           你成功破解了所有机关，唤醒了沉睡的洛阳记忆。<br>
@@ -112,7 +104,6 @@
     <div id="transition-screen"><div id="trans-text" class="transition-text"></div></div>
     <div id="compass">寻龙点穴</div>
 
-    <!-- 所有关卡的 onClick 事件增加了 ontouchstart，确保移动设备即时响应 -->
     <div id="puzzle-1" class="puzzle-overlay"><div id="board-1" class="puzzle-board"><div class="close-btn" onclick="closePuzzle(1)" ontouchstart="closePuzzle(1)">✖</div><div class="puzzle-title">龙纹石门机关</div><div class="poem-desc">暗道尽头的凹槽，须对出暗号：</div><div class="poem-text">“洛阳亲友如相问，<br>_____________。”</div><button class="option-btn" onclick="checkAnswer1('wrong')">A. 不及汪伦送我情</button><button class="option-btn" onclick="checkAnswer1('correct')">B. 一片冰心在玉壶</button><button class="option-btn" onclick="checkAnswer1('wrong')">C. 孤帆远影碧空尽</button><button class="option-btn" onclick="checkAnswer1('wrong')">D. 天涯若比邻</button></div></div>
     <div id="puzzle-2" class="puzzle-overlay"><div id="board-2" class="puzzle-board"><div class="close-btn" onclick="closePuzzle(2)" ontouchstart="closePuzzle(2)">✖</div><div class="puzzle-title">西域商路密卷</div><div class="poem-desc">唯有对出口令方可开启密道：</div><div class="poem-text">“劝君更尽一杯酒，<br>西出____无故人。”</div><button class="option-btn" onclick="checkAnswer2('wrong')">A. 雁门</button><button class="option-btn" onclick="checkAnswer2('correct')">B. 阳关</button><button class="option-btn" onclick="checkAnswer2('wrong')">C. 玉门</button><button class="option-btn" onclick="checkAnswer2('wrong')">D. 楼兰</button></div></div>
     <div id="puzzle-3" class="puzzle-overlay"><div id="board-3" class="puzzle-board"><div class="close-btn" onclick="closePuzzle(3)" ontouchstart="closePuzzle(3)">✖</div><div class="puzzle-title">青铜八卦锁</div><div class="poem-desc">破解天干之谜以倒转齿轮：</div><div class="poem-text">“天干地支中，‘甲’对应的五行是？”</div><button class="option-btn" onclick="checkAnswer3('wrong')">A. 金</button><button class="option-btn" onclick="checkAnswer3('correct')">B. 木</button><button class="option-btn" onclick="checkAnswer3('wrong')">C. 水</button><button class="option-btn" onclick="checkAnswer3('wrong')">D. 火</button></div></div>
@@ -130,10 +121,24 @@
     </div>
 
     <a-scene renderer="colorManagement: true; antialias: true;">
-      <a-sky id="main-sky" src="room1.jpg" rotation="0 -90 0"></a-sky>
+      <a-assets>
+        <img id="img-room1" src="room1.jpg">
+        <img id="img-room2" src="room2.jpg">
+        <img id="img-room3" src="room3.jpg">
+        <img id="img-room4" src="room4.jpg">
+        <audio id="audio-bgm1" src="bgm1.mp3" loop preload="auto"></audio>
+        <audio id="audio-bgm2" src="bgm2.mp3" loop preload="auto"></audio>
+        <audio id="audio-bgm3" src="bgm3.mp3" loop preload="auto"></audio>
+        <audio id="audio-ui" src="ui.mp3" preload="auto"></audio>
+        <audio id="audio-door" src="door.mp3" preload="auto"></audio>
+        <audio id="audio-paper" src="paper.mp3" preload="auto"></audio>
+        <audio id="audio-metal" src="metal.mp3" preload="auto"></audio>
+      </a-assets>
 
-      <a-entity camera look-controls="pointerLockEnabled: false;">
-        <a-cursor cursor="rayOrigin: mouse; fuse: false" raycaster="objects: .interactive" color="#fff" radius-inner="0.01" radius-outer="0.02"></a-cursor>
+      <a-sky id="main-sky" src="#img-room1" rotation="0 -90 0"></a-sky>
+
+      <a-entity camera look-controls="pointerLockEnabled: true;">
+        <a-cursor cursor="rayOrigin: entity; fuse: false" raycaster="objects: .interactive" color="#d4af37" radius-inner="0.01" radius-outer="0.02"></a-cursor>
       </a-entity>
 
       <a-light id="dynamic-light" type="point" color="#FFAA00" position="0 1 -2" intensity="0.6" animation="property: intensity; to: 0.3; dir: alternate; loop: true; dur: 800"></a-light>
@@ -206,6 +211,10 @@
       function triggerSecret(level) {
           cancelGaze(); 
           playAudioSafe('audio-ui');
+          // 退出指针锁定，方便玩家操作 UI
+          document.exitPointerLock = document.exitPointerLock || document.mozExitPointerLock;
+          if (document.exitPointerLock) { document.exitPointerLock(); }
+
           const data = tangSecrets[level];
           document.getElementById('secret-title').innerText = data.title;
           document.getElementById('secret-text').innerText = data.text;
@@ -248,19 +257,22 @@
           ids.forEach(id => { let el = document.getElementById(id); if(el) el.pause(); });
           document.querySelectorAll('.puzzle-overlay').forEach(el => el.style.display = 'none');
           document.getElementById('game-over-screen').style.display = 'flex';
+          document.exitPointerLock = document.exitPointerLock || document.mozExitPointerLock;
+          if (document.exitPointerLock) { document.exitPointerLock(); }
       }
       
       function triggerFinale() {
           playAudioSafe('audio-ui');
           document.getElementById('finale-screen').style.display = 'flex';
+          document.exitPointerLock = document.exitPointerLock || document.mozExitPointerLock;
+          if (document.exitPointerLock) { document.exitPointerLock(); }
       }
 
-      // 【核心载荷 2】：强制双轨事件绑定（click + touchstart），绕过移动端系统底层的静默拦截
       const startBtn = document.getElementById('start-btn');
       const startEvents = ['click', 'touchstart'];
       
       function initGame(e) {
-        if(e.type === 'touchstart') e.preventDefault(); // 防止穿透点击
+        if(e.type === 'touchstart') e.preventDefault();
         if (!audioUnlocked) {
             const ids = ['audio-bgm1', 'audio-bgm2', 'audio-bgm3', 'audio-ui', 'audio-door', 'audio-paper', 'audio-metal'];
             ids.forEach(id => { let el = document.getElementById(id); if(el) { el.volume = 0; let p = el.play(); if(p !== undefined) p.then(() => { el.pause(); el.currentTime = 0; }).catch(e=>{}); } });
@@ -274,27 +286,34 @@
 
       startEvents.forEach(evt => startBtn.addEventListener(evt, initGame, {passive: false}));
 
-      function openPuzzle(num) { if (num !== currentLevel) return; playAudioSafe('audio-ui'); document.getElementById('puzzle-' + num).style.display = 'flex'; }
+      function openPuzzle(num) { 
+          if (num !== currentLevel) return; 
+          playAudioSafe('audio-ui'); 
+          document.exitPointerLock = document.exitPointerLock || document.mozExitPointerLock;
+          if (document.exitPointerLock) { document.exitPointerLock(); }
+          document.getElementById('puzzle-' + num).style.display = 'flex'; 
+      }
+      
       function closePuzzle(num) { playAudioSafe('audio-ui'); document.getElementById('puzzle-' + num).style.display = 'none'; }
 
       function checkAnswer1(result) {
         if (result === 'correct') {
           playAudioSafe('audio-ui'); closePuzzle(1);
-          startTransition('机关轰鸣，天旋地转...', 'room2.jpg', 'hotspot-1', 'hotspot-2', '轰隆隆...\n石壁裂开，你进入了【胡商藏经阁】', 2, null, null);
+          startTransition('机关轰鸣，天旋地转...', '#img-room2', 'hotspot-1', 'hotspot-2', '轰隆隆...\n石壁裂开，你进入了【胡商藏经阁】', 2, null, null);
         } else { triggerGameOver(); }
       }
 
       function checkAnswer2(result) {
         if (result === 'correct') {
           playAudioSafe('audio-ui'); closePuzzle(2);
-          startTransition('丝帛燃烧，书架缓缓移开...', 'room3.jpg', 'hotspot-2', 'hotspot-3', '你发现了深渊底部的【青铜机关室】！', 3, 'audio-bgm2', 'audio-paper');
+          startTransition('丝帛燃烧，书架缓缓移开...', '#img-room3', 'hotspot-2', 'hotspot-3', '你发现了深渊底部的【青铜机关室】！', 3, 'audio-bgm2', 'audio-paper');
         } else { triggerGameOver(); }
       }
 
       function checkAnswer3(result) {
         if (result === 'correct') {
           playAudioSafe('audio-ui'); closePuzzle(3);
-          startTransition('青铜巨门缓缓开启，万丈佛光倾泻而出...', 'room4.jpg', 'hotspot-3', null, '震撼！触摸大佛，获取终极奖励！', 4, 'audio-bgm3', 'audio-metal');
+          startTransition('青铜巨门缓缓开启，万丈佛光倾泻而出...', '#img-room4', 'hotspot-3', null, '震撼！触摸大佛，获取终极奖励！', 4, 'audio-bgm3', 'audio-metal');
         } else { triggerGameOver(); }
       }
 
@@ -392,7 +411,7 @@
 
           currentLevel = 1; cancelGaze();
 
-          document.getElementById('main-sky').setAttribute('src', 'room1.jpg');
+          document.getElementById('main-sky').setAttribute('src', '#img-room1');
           const dynLight = document.getElementById('dynamic-light');
           dynLight.setAttribute('visible', 'true'); dynLight.setAttribute('color', '#FFAA00');
           document.getElementById('dust-particles').setAttribute('visible', 'false');
@@ -420,6 +439,20 @@
 
           document.getElementById('start-screen').style.display = 'flex';
       }
+
+      // PC 端快捷键绑定：按 ESC 键即可关闭所有已打开的面板
+      document.addEventListener('keydown', function(event) {
+          if (event.key === 'Escape') {
+              if (document.getElementById('secret-panel-overlay').style.display === 'flex') {
+                  closeSecret();
+              }
+              for (let i = 1; i <= 3; i++) {
+                  if (document.getElementById('puzzle-' + i).style.display === 'flex') {
+                      closePuzzle(i);
+                  }
+              }
+          }
+      });
     </script>
   </body>
 </html>
