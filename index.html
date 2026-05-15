@@ -2,36 +2,47 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>寻宝洛阳 - 沉浸式 3D 空间重制版</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>寻宝洛阳 - PC 沉浸式最终版</title>
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <style>
       body { font-family: '楷体', 'STKaiti', serif; margin: 0; overflow: hidden; background: #000; touch-action: none; }
-      #ui { position: absolute; top: 10%; left: 50%; transform: translateX(-50%); z-index: 10; color: #fff; text-align: center; width: 90%; pointer-events: none; display: flex; flex-direction: column; align-items: center; gap: 15px;}
       
-      /* 优化提示框，增加毛玻璃效果 */
+      /* UI 提示层 */
+      #ui { position: absolute; top: 10%; left: 50%; transform: translateX(-50%); z-index: 10; color: #fff; text-align: center; width: 90%; pointer-events: none; display: flex; flex-direction: column; align-items: center; gap: 15px;}
       .msg-box { background: rgba(15, 8, 3, 0.85); backdrop-filter: blur(5px); padding: 15px 30px; border-radius: 8px; display: none; font-size: 20px; border: 1px solid #d4af37; box-shadow: 0 0 20px rgba(212, 175, 55, 0.5); letter-spacing: 2px;}
       
-      /* 环境叙事（彩蛋）专属 UI */
+      /* 环境叙事（绝笔信）专属 UI */
       .lore-box { background: rgba(10, 20, 30, 0.85); backdrop-filter: blur(5px); padding: 15px 30px; border-radius: 8px; display: none; font-size: 18px; color: #a0c0d0; border: 1px solid #5f9ea0; box-shadow: 0 0 20px rgba(95, 158, 160, 0.5); font-style: italic; max-width: 600px;}
       .lore-title { color: #5f9ea0; font-weight: bold; font-size: 20px; margin-bottom: 8px; font-style: normal;}
 
+      /* 彩蛋与结局面板层 */
       .puzzle-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 999; flex-direction: column; align-items: center; justify-content: center; }
       .puzzle-board { border-radius: 10px; padding: 25px; text-align: center; width: 85%; max-width: 650px; position: relative; box-sizing: border-box; }
       .option-btn { display: block; width: 100%; padding: 12px; font-size: 18px; font-family: '楷体'; border-radius: 5px; cursor: pointer; margin-bottom: 12px; transition: all 0.1s; box-sizing: border-box; pointer-events: auto;}
       .option-btn:active { transform: scale(0.98); }
+      .close-btn { position: absolute; top: 8px; right: 12px; font-size: 24px; cursor: pointer; pointer-events: auto;}
 
+      /* 抬头彩蛋面板样式 */
+      #secret-panel { background: #222; border: 2px solid #d4af37; box-shadow: 0 0 50px rgba(212, 175, 55, 0.4); width: 85%; max-width: 650px; padding: 15px; max-height: 80vh; overflow-y: auto; pointer-events: auto;}
+      .secret-announcement { color: #ffeb3b; font-size: 22px; margin-bottom: 15px; font-weight: bold; text-shadow: 0 0 10px #ffeb3b; }
+      .secret-content img { max-width: 100%; max-height: 200px; border-radius: 5px; border: 1px solid #555; margin-bottom: 15px; }
+      .secret-title { color: #d4af37; font-size: 20px; margin-bottom: 10px; }
+      .secret-text { color: #ccc; font-size: 16px; line-height: 1.5; text-align: left; }
+
+      /* 过场黑屏与指南针 */
       #transition-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 1000; opacity: 1; pointer-events: none; transition: opacity 1.5s ease-in-out; display: flex; flex-direction: column; align-items: center; justify-content: center; }
       .transition-text { color: #d4af37; font-size: 20px; letter-spacing: 3px; opacity: 0; transition: opacity 1s ease-in-out; text-shadow: 0 0 10px #d4af37; text-align: center; padding: 0 20px;}
       #compass { position: absolute; bottom: 30px; left: 20px; z-index: 10; color: #d4af37; font-size: 14px; width: 50px; height: 50px; border: 1px solid #d4af37; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.4); }
       
+      /* 自定义原生全屏按钮 */
       #fs-btn { position: absolute; bottom: 20px; right: 20px; z-index: 9999; cursor: pointer; background: rgba(0,0,0,0.5); border: 2px solid #d4af37; border-radius: 8px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease;}
       #fs-btn:hover { background: rgba(212, 175, 55, 0.3); transform: scale(1.1); }
       #fs-btn svg { width: 24px; height: 24px; stroke: #d4af37; stroke-width: 2; fill: none; }
 
+      /* 初始开始界面 */
       #start-screen { position: absolute; top:0; left:0; width:100%; height:100%; background: linear-gradient(rgba(10, 5, 5, 0.85), rgba(5, 2, 0, 0.95)), url('room1.jpg') center/cover; display:flex; flex-direction: column; justify-content:center; align-items:center; z-index: 1001; }
       .game-title { font-size: 45px; color: #d4af37; letter-spacing: 15px; margin-bottom: 50px; font-family: '楷体', 'STKaiti', serif; text-shadow: 0 0 15px rgba(212, 175, 55, 0.6), 0 0 30px rgba(212, 175, 55, 0.4), 4px 4px 5px #000; }
-      
       #start-btn { padding: 15px 40px; font-size: 22px; background: rgba(20, 10, 5, 0.6); color: #d4af37; border: 2px solid #d4af37; cursor: pointer; font-family: '楷体', 'STKaiti', serif; border-radius: 4px; transition: all 0.3s ease; animation: breatheLight 2.5s infinite alternate ease-in-out; pointer-events: auto;}
       #start-btn:active { background: rgba(212, 175, 55, 0.4); transform: scale(0.95); }
 
@@ -40,7 +51,9 @@
         100% { box-shadow: 0 0 20px rgba(212, 175, 55, 0.5) inset, 0 0 35px rgba(212, 175, 55, 0.6); text-shadow: 0 0 15px rgba(212, 175, 55, 1); }
       }
 
-      /* 通关白屏特效预设 */
+      /* 凝视加载动画与结局白屏特效 */
+      #gaze-loader { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 40px; height: 40px; border: 4px solid transparent; border-top-color: #d4af37; border-radius: 50%; z-index: 100; display: none; pointer-events: none;}
+      @keyframes spin { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(360deg); } }
       #supernova-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #FFF; z-index: 998; opacity: 0; pointer-events: none; transition: opacity 2s ease-in; }
     </style>
   </head>
@@ -54,7 +67,7 @@
 
     <div id="start-screen">
       <div class="game-title">寻宝洛阳</div>
-      <button id="start-btn" onclick="initGame(event)">触碰石门，进入地宫</button>
+      <button id="start-btn" onclick="initGame()">触碰石门，进入地宫</button>
     </div>
     
     <div id="supernova-screen"></div>
@@ -74,10 +87,24 @@
       </div>
     </div>
 
+    <div id="secret-panel-overlay" class="puzzle-overlay">
+      <div id="secret-panel" class="puzzle-board">
+        <div class="close-btn" style="color:#d4af37;" onclick="closeSecret()">✖</div>
+        <div class="secret-announcement">福运当头，你找到了唐宫秘闻</div>
+        <div class="secret-content">
+          <img id="secret-img" src="" alt="Secret Image">
+          <div id="secret-title" class="secret-title"></div>
+          <div id="secret-text" class="secret-text"></div>
+        </div>
+      </div>
+    </div>
+
     <div id="ui">
         <div id="msg" class="msg-box"></div>
         <div id="lore" class="lore-box"></div>
+        <div id="gaze-loader"></div>
     </div>
+    
     <div id="transition-screen"><div id="trans-text" class="transition-text"></div></div>
     <div id="compass">寻龙点穴</div>
 
@@ -101,7 +128,9 @@
       <a-entity camera look-controls="pointerLockEnabled: true;" position="0 1.6 0">
         <a-cursor color="#d4af37" radius-inner="0.01" radius-outer="0.02" raycaster="objects: .interactive"
           animation__scale_enter="property: scale; to: 1.8 1.8 1.8; startEvents: mouseenter; dur: 150"
-          animation__scale_leave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 150">
+          animation__scale_leave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 150"
+          animation__color_enter="property: components.material.material.color; type: color; to: #FF0000; startEvents: mouseenter; dur: 150"
+          animation__color_leave="property: components.material.material.color; type: color; to: #d4af37; startEvents: mouseleave; dur: 150">
         </a-cursor>
       </a-entity>
 
@@ -114,21 +143,23 @@
          <a-sphere radius="0.01" color="#FFD700" opacity="0.08" position="0 1.2 -1.5" animation__pos="property: position; to: 0 1.5 -1.5; dir: alternate; loop: true; dur: 8000; easing: easeInOutSine"></a-sphere>
       </a-entity>
 
+      <a-plane class="interactive" position="0 4 0" rotation="90 0 0" width="10" height="10" material="opacity: 0; transparent: true" onmouseenter="startGaze()" onmouseleave="cancelGaze()"></a-plane>
+
       <a-entity id="level-1-entities">
         <a-circle id="hotspot-1" class="interactive" position="-1 -0.5 -4.8" radius="1.5" opacity="0" onclick="hitDoor(1)"></a-circle>
-        <a-torus id="key-1" class="interactive" position="3 -1 2" rotation="0 45 0" radius="0.15" radius-tubular="0.03" color="#3CB371" material="emissive: #3CB371; emissiveIntensity: 0.5" animation="property: rotation; to: 0 405 0; loop: true; dur: 4000; easing: linear" onclick="hitKey(1)"></a-torus>
-        <a-octahedron class="interactive" position="-2 -1.5 3" radius="0.08" color="#5f9ea0" material="emissive: #5f9ea0; emissiveIntensity: 0.8" animation="property: position; to: -2 -1.4 3; dir: alternate; loop: true; dur: 2000" onclick="showLore('摸金绝笔', '这地宫根本不是宝库，而是个吞噬活人的陷阱！老王刚刚还在我身后，一转眼就没影了...')"></a-octahedron>
+        <a-torus id="key-1" class="interactive" position="3 -1 2" rotation="0 45 0" radius="0.1" radius-tubular="0.02" color="#3CB371" material="emissive: #3CB371; emissiveIntensity: 0.3" animation="property: rotation; to: 0 405 0; loop: true; dur: 4000; easing: linear" onclick="hitKey(1)"></a-torus>
+        <a-octahedron class="interactive" position="-2 -1.5 3" radius="0.05" color="#5f9ea0" material="emissive: #5f9ea0; emissiveIntensity: 0.4" animation="property: position; to: -2 -1.4 3; dir: alternate; loop: true; dur: 2000" onclick="showLore('摸金绝笔', '这地宫根本不是宝库，而是个吞噬活人的陷阱！老王刚刚还在我身后，一转眼就没影了...')"></a-octahedron>
       </a-entity>
 
       <a-entity id="level-2-entities" visible="false">
          <a-circle id="hotspot-2" radius="1.5" position="3 0 -2" opacity="0" onclick="hitDoor(2)"></a-circle>
-         <a-cylinder id="key-2" position="-2 0 3" rotation="30 45 10" radius="0.05" height="0.4" color="#d4af37" material="emissive: #d4af37; emissiveIntensity: 0.4" animation="property: position; to: -2 0.2 3; dir: alternate; loop: true; dur: 1500" onclick="hitKey(2)"></a-cylinder>
-         <a-octahedron class="interactive" position="1 -1 -3" radius="0.08" color="#5f9ea0" material="emissive: #5f9ea0; emissiveIntensity: 0.8" animation="property: position; to: 1 -0.9 -3; dir: alternate; loop: true; dur: 2000" onclick="showLore('西域商贾的羊皮纸', '丝绸之路的尽头，不仅有黄金，还有无尽的杀戮。那帮马贼离我不远了，愿佛祖保佑。')"></a-octahedron>
+         <a-cylinder id="key-2" position="-2 0 3" rotation="30 45 10" radius="0.03" height="0.3" color="#d4af37" material="emissive: #d4af37; emissiveIntensity: 0.3" animation="property: position; to: -2 0.2 3; dir: alternate; loop: true; dur: 1500" onclick="hitKey(2)"></a-cylinder>
+         <a-octahedron class="interactive" position="1 -1 -3" radius="0.05" color="#5f9ea0" material="emissive: #5f9ea0; emissiveIntensity: 0.4" animation="property: position; to: 1 -0.9 -3; dir: alternate; loop: true; dur: 2000" onclick="showLore('西域商贾的羊皮纸', '丝绸之路的尽头，不仅有黄金，还有无尽的杀戮。那帮马贼离我不远了，愿佛祖保佑。')"></a-octahedron>
       </a-entity>
 
       <a-entity id="level-3-entities" visible="false">
          <a-circle id="hotspot-3" radius="1.2" position="-1.5 0 -3" opacity="0" onclick="hitDoor(3)"></a-circle>
-         <a-dodecahedron id="key-3" position="2 1.5 2" radius="0.15" color="#FF4500" material="emissive: #FF4500; emissiveIntensity: 0.6" animation="property: rotation; to: 360 360 0; loop: true; dur: 5000; easing: linear" onclick="hitKey(3)"></a-dodecahedron>
+         <a-dodecahedron id="key-3" position="2 1.5 2" radius="0.1" color="#FF4500" material="emissive: #FF4500; emissiveIntensity: 0.3" animation="property: rotation; to: 360 360 0; loop: true; dur: 5000; easing: linear" onclick="hitKey(3)"></a-dodecahedron>
       </a-entity>
 
       <a-entity id="hotspot-finale" position="0 0 -5" visible="false">
@@ -141,12 +172,12 @@
       let currentLevel = 1;
       let currentBgmId = null;
       let loreTimer = null;
+      let gazeTimer = null;
 
+      // 全屏控制
       function toggleFullScreen() {
         if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen().catch(err => {
-                console.log(`全屏被拦截: ${err.message}`);
-            });
+            document.documentElement.requestFullscreen().catch(err => console.log(`全屏被拦截: ${err.message}`));
         } else {
             if (document.exitFullscreen) document.exitFullscreen();
         }
@@ -159,7 +190,7 @@
 
       function playAudioSafe(id, volume = 0.5) {
           let el = document.getElementById(id);
-          if(el) { el.currentTime = 0; el.volume = volume; let p = el.play(); if(p !== undefined) p.catch(e => console.warn('Audio blocked:', e)); }
+          if(el) { el.currentTime = 0; el.volume = volume; let p = el.play(); if(p !== undefined) p.catch(e => {}); }
       }
 
       function switchBGM(nextBgmId) {
@@ -181,17 +212,64 @@
           if(currentLevel !== 4) setTimeout(() => { box.style.display = 'none'; }, 3500); 
       }
 
-      // 彩蛋环境叙事 UI 逻辑
+      // 叙事碎片 UI
       function showLore(title, text) {
           playAudioSafe('audio-ui');
           const box = document.getElementById('lore');
           box.innerHTML = `<div class="lore-title">【${title}】</div><div>${text}</div>`;
           box.style.display = 'block';
           if(loreTimer) clearTimeout(loreTimer);
-          loreTimer = setTimeout(() => { box.style.display = 'none'; }, 5000); // 5秒后自动消失，不打断沉浸感
+          loreTimer = setTimeout(() => { box.style.display = 'none'; }, 5000); 
       }
 
-      function initGame(e) {
+      // 唐朝秘闻彩蛋数据
+      const tangSecrets = {
+          1: { title: "雕版印刷术的黎明与文明的火种", text: "早在公元七世纪的初唐时期，充满智慧的中国匠人就已经发明并开始使用木板雕刻印刷术。这项伟大的技术创新打破了少数贵族阶层对教育资源的长期垄断，更为后来宋代毕昇发明活字印刷术奠定了最为坚实的基础，是中华民族对世界文明进程做出的不可磨灭的伟大贡献。", img: "Die_Buchdruckerei_by_Daniel_Chodowiecki_(150289207).jpg" },
+          2: { title: "开国之君：唐高祖李渊的霸业", text: "公元618年，太原留守李渊顺应历史潮流起兵。作为大唐帝国的绝对奠基人，他不仅展现了卓越非凡的军事统帅能力，在稳固政权后更颁布了均田制与租庸调制；这位往往被后世演义所低估的开国皇帝，为长达近三百年的大唐盛世筑牢了最为坚固的根基。", img: "TangGaozu.jpg" },
+          3: { title: "玄奘西行：丝绸之路上的文化苦旅", text: "唐朝贞观初年，高僧玄奘历经九死一生，穿越塔克拉玛干沙漠，翻越葱岭，耗时十余年，行程数万里。他带回珍贵梵文经典并潜心翻译。他口述的《大唐西域记》更让玄奘成为了中外文化交流史上最璀璨的使者。", img: "Xuanzang_w (1).jpg" }
+      };
+
+      // 凝视系统（抬头看天花板彩蛋）
+      function startGaze() {
+          if (currentLevel < 1 || currentLevel > 3 || document.getElementById('secret-panel-overlay').style.display === 'flex') return;
+          const loader = document.getElementById('gaze-loader');
+          loader.style.display = 'block';
+          loader.style.animation = 'spin 1s linear infinite';
+          gazeTimer = setTimeout(() => { triggerSecret(currentLevel); }, 3000);
+      }
+
+      function cancelGaze() {
+          if (gazeTimer) { clearTimeout(gazeTimer); gazeTimer = null; }
+          const loader = document.getElementById('gaze-loader');
+          loader.style.display = 'none';
+          loader.style.animation = 'none';
+      }
+
+      function triggerSecret(level) {
+          cancelGaze(); 
+          playAudioSafe('audio-ui');
+          forceExitPointerLock(); // 释放鼠标以便点击关闭按钮
+
+          const data = tangSecrets[level];
+          document.getElementById('secret-title').innerText = data.title;
+          document.getElementById('secret-text').innerText = data.text;
+          
+          const safeUrl = data.img.split('/').map(seg => encodeURIComponent(seg)).join('/');
+          const imgEl = document.getElementById('secret-img');
+          imgEl.onerror = function() {
+              this.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='200'%3E%3Crect width='400' height='200' fill='%23222'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23d4af37' font-size='20' font-family='楷体'%3E[图片加载失败]%3C/text%3E%3C/svg%3E";
+          };
+          imgEl.src = safeUrl;
+          document.getElementById('secret-panel-overlay').style.display = 'flex';
+      }
+
+      function closeSecret() {
+          playAudioSafe('audio-ui');
+          document.getElementById('secret-panel-overlay').style.display = 'none';
+      }
+
+      // 初始化游戏
+      function initGame() {
           document.getElementById('start-screen').style.display = 'none';
           document.getElementById('transition-screen').style.opacity = '0';
           playAudioSafe('audio-door', 0.8);
@@ -202,20 +280,20 @@
           }, 2000);
       }
 
-      // 玩家点击石门的逻辑
+      // 点击门提示
       function hitDoor(level) {
           if (level !== currentLevel) return;
           playAudioSafe('audio-ui');
-          if (level === 1) showMsg("石门死死锁住。角落里似乎有绿色的光芒闪烁...");
-          if (level === 2) showMsg("密道被封印。必须找到失落的【西域通关密卷】才能放行！");
-          if (level === 3) showMsg("青铜齿轮卡死！四周漂浮的红色阵核是关键...");
+          if (level === 1) showMsg("石门死死锁住。寻找散落在角落里的【龙纹玉佩】...");
+          if (level === 2) showMsg("密道被封印。必须找到失落的【西域通关密卷】！");
+          if (level === 3) showMsg("青铜齿轮卡死！寻找悬浮在空中的红色【阵核】...");
       }
 
-      // 玩家找到并点击隐藏钥匙的逻辑
+      // 点击钥匙通关
       function hitKey(level) {
           if (level !== currentLevel) return;
           playAudioSafe('audio-ui');
-          document.getElementById('key-' + level).setAttribute('visible', 'false'); // 拿到钥匙后消失
+          document.getElementById('key-' + level).setAttribute('visible', 'false'); 
           
           if (level === 1) {
               startTransition('拾得【龙纹玉佩】！石门轰然洞开...', '#img-room2', 1, 2, '你进入了【胡商藏经阁】\n寻找下一把密卷钥匙', null, 'audio-door');
@@ -235,7 +313,7 @@
         transText.innerText = transTextMsg; 
         transScreen.style.opacity = '1';
         transScreen.style.pointerEvents = 'auto'; 
-        currentLevel = -1; // 锁定状态机
+        currentLevel = -1; 
         
         if(transSfxId) playAudioSafe(transSfxId, 0.8); 
 
@@ -245,7 +323,6 @@
           if(nextImageId) document.getElementById('main-sky').setAttribute('src', nextImageId); 
           if (nextBgmTargetId) switchBGM(nextBgmTargetId);
 
-          // 权限转移：剥夺旧房间交互权，赋予新房间交互权
           if (oldLevelNum) {
               let oldGroup = document.getElementById(`level-${oldLevelNum}-entities`);
               if (oldGroup) {
@@ -258,13 +335,11 @@
               let newGroup = document.getElementById(`level-${newLevelNum}-entities`);
               if (newGroup) {
                   newGroup.setAttribute('visible', 'true');
-                  // 重新激活新区域的所有交互元素
                   let keys = ['hotspot', 'key'];
                   keys.forEach(k => {
                       let el = document.getElementById(`${k}-${newLevelNum}`);
                       if(el) el.classList.add('interactive');
                   });
-                  // 激活当前区域的彩蛋
                   Array.from(newGroup.querySelectorAll('a-octahedron')).forEach(el => el.classList.add('interactive'));
               }
           }
@@ -299,36 +374,30 @@
         }, 4000);
       }
 
-      // === 【特性升级 3】：结局视觉奇观 ===
+      // 结局超新星特效
       function triggerFinale() {
-          if (currentLevel !== 4) return; // 防护死锁
-          currentLevel = -1; // 锁定状态，防止重复点击
+          if (currentLevel !== 4) return; 
+          currentLevel = -1; 
           
           document.getElementById('msg').style.display = 'none';
-          
-          // 播放神圣重低音
           playAudioSafe('audio-metal', 1.0);
           setTimeout(() => playAudioSafe('audio-door', 1.0), 500);
 
-          // 1. 光爆效果
           let light = document.getElementById('dynamic-light');
           light.removeAttribute('animation');
           light.setAttribute('color', '#FFFFFF');
           light.setAttribute('animation__burst', 'property: intensity; from: 0.6; to: 15; dur: 2500; easing: easeInExpo');
 
-          // 2. 粒子加速狂暴
           let spheres = document.getElementById('dust-particles').querySelectorAll('a-sphere');
           spheres.forEach(s => {
               s.setAttribute('color', '#FFFFFF');
-              s.setAttribute('animation__pos', 'dur: 800'); // 加速乱飞
+              s.setAttribute('animation__pos', 'dur: 800'); 
           });
 
-          // 3. 屏幕白化
           setTimeout(() => {
               document.getElementById('supernova-screen').style.opacity = '1';
           }, 1500);
 
-          // 4. 彻底平静，弹出大结局 UI
           setTimeout(() => {
               document.getElementById('finale-screen').style.display = 'flex';
               forceExitPointerLock();
@@ -342,10 +411,17 @@
       }
 
       function restartGame() {
-          // 刷新页面是最彻底的重置方案，清除所有引擎缓存
           window.location.reload();
       }
 
+      // 快捷键支持
+      document.addEventListener('keydown', function(event) {
+          if (event.key === 'Escape') {
+              if (document.getElementById('secret-panel-overlay').style.display === 'flex') {
+                  closeSecret();
+              }
+          }
+      });
     </script>
   </body>
 </html>
