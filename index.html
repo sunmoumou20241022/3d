@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>寻宝洛阳 - PC沉浸版完全体</title>
+    <title>寻宝洛阳 - 全端兼容终极版</title>
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <style>
       body { font-family: '楷体', 'STKaiti', serif; margin: 0; overflow: hidden; background: #000; touch-action: none; }
@@ -11,10 +11,7 @@
       .msg-box { background: rgba(15, 8, 3, 0.9); padding: 15px 25px; border-radius: 8px; display: none; font-size: 20px; border: 1px solid #d4af37; box-shadow: 0 0 15px #d4af37;}
       
       .puzzle-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 999; flex-direction: column; align-items: center; justify-content: center; }
-      
-      /* 针对 PC 宽屏优化的面板尺寸限制 */
       .puzzle-board { border-radius: 10px; padding: 25px; text-align: center; width: 85%; max-width: 650px; position: relative; box-sizing: border-box; }
-      
       .puzzle-title { font-size: 24px; margin-bottom: 12px; font-weight: bold; padding-bottom: 8px; letter-spacing: 2px;}
       .poem-text { font-size: 20px; text-align: center; margin: 15px 0; letter-spacing: 2px; font-weight: bold; line-height: 1.4;}
       .poem-desc { font-size: 16px; margin-bottom: 20px; line-height: 1.5;}
@@ -46,6 +43,8 @@
       
       #start-screen { position: absolute; top:0; left:0; width:100%; height:100%; background: linear-gradient(rgba(10, 5, 5, 0.85), rgba(5, 2, 0, 0.95)), url('room1.jpg') center/cover; display:flex; flex-direction: column; justify-content:center; align-items:center; z-index: 1001; }
       .game-title { font-size: 45px; color: #d4af37; letter-spacing: 15px; margin-bottom: 50px; font-family: '楷体', 'STKaiti', serif; text-shadow: 0 0 15px rgba(212, 175, 55, 0.6), 0 0 30px rgba(212, 175, 55, 0.4), 4px 4px 5px #000; }
+      
+      /* 【终极修复 1】：将按钮响应升级为全端兼容模式，绑定 click + touchstart */
       #start-btn { padding: 15px 40px; font-size: 22px; background: rgba(20, 10, 5, 0.6); color: #d4af37; border: 2px solid #d4af37; cursor: pointer; font-family: '楷体', 'STKaiti', serif; border-radius: 4px; transition: all 0.3s ease; animation: breatheLight 2.5s infinite alternate ease-in-out; }
       #start-btn:active { background: rgba(212, 175, 55, 0.4); transform: scale(0.95); }
 
@@ -60,7 +59,6 @@
       .death-sub { font-size: 18px; color: #555; letter-spacing: 2px; }
       @keyframes fadeBlood { 0% { opacity: 0; transform: scale(0.9); } 50% { opacity: 1; transform: scale(1); } 100% { opacity: 1; transform: scale(1); } }
 
-      /* PC 端彩蛋面板宽度限制 */
       #secret-panel { background: #222; border: 2px solid #d4af37; box-shadow: 0 0 50px rgba(212, 175, 55, 0.4); width: 85%; max-width: 650px; padding: 15px; max-height: 80vh; overflow-y: auto;}
       .secret-announcement { color: #ffeb3b; font-size: 22px; margin-bottom: 15px; font-weight: bold; text-shadow: 0 0 10px #ffeb3b; }
       .secret-content img { max-width: 100%; max-height: 200px; border-radius: 5px; border: 1px solid #555; margin-bottom: 15px; }
@@ -94,8 +92,8 @@
           <span style="color: #FFD700; font-weight: bold;">【终极奖励解锁：洛阳风物图鉴与荣誉守陵人称号】</span>
         </div>
         <div style="display: flex; justify-content: center; gap: 15px; flex-direction: row; flex-wrap: wrap;">
-          <button class="option-btn" style="background: #d4af37; color: #000; border: 2px solid #FFF; font-weight: bold; width: 45%; margin: 0;" onclick="restartGame()">再入轮回<br><span style="font-size: 14px;">(重新开始)</span></button>
-          <button class="option-btn" style="background: rgba(40, 20, 10, 0.8); color: #d4af37; border: 2px solid #d4af37; font-weight: bold; width: 45%; margin: 0;" onclick="stayInRoom()">驻留此地<br><span style="font-size: 14px;">(继续探索)</span></button>
+          <button class="option-btn" style="background: #d4af37; color: #000; border: 2px solid #FFF; font-weight: bold; width: 45%; margin: 0;" onclick="restartGame()" ontouchstart="restartGame()">再入轮回<br><span style="font-size: 14px;">(重新开始)</span></button>
+          <button class="option-btn" style="background: rgba(40, 20, 10, 0.8); color: #d4af37; border: 2px solid #d4af37; font-weight: bold; width: 45%; margin: 0;" onclick="stayInRoom()" ontouchstart="stayInRoom()">驻留此地<br><span style="font-size: 14px;">(继续探索)</span></button>
         </div>
       </div>
     </div>
@@ -113,346 +111,4 @@
         <div class="close-btn" style="color:#d4af37;" onclick="closeSecret()" ontouchstart="closeSecret()">✖</div>
         <div class="secret-announcement">福运当头，你找到了唐朝秘闻</div>
         <div class="secret-content">
-          <img id="secret-img" src="" alt="Secret Image">
-          <div id="secret-title" class="secret-title"></div>
-          <div id="secret-text" class="secret-text"></div>
-        </div>
-      </div>
-    </div>
-
-    <a-scene renderer="colorManagement: true; antialias: true;">
-      <a-assets>
-        <img id="img-room1" src="room1.jpg">
-        <img id="img-room2" src="room2.jpg">
-        <img id="img-room3" src="room3.jpg">
-        <img id="img-room4" src="room4.jpg">
-        <audio id="audio-bgm1" src="bgm1.mp3" loop preload="auto"></audio>
-        <audio id="audio-bgm2" src="bgm2.mp3" loop preload="auto"></audio>
-        <audio id="audio-bgm3" src="bgm3.mp3" loop preload="auto"></audio>
-        <audio id="audio-ui" src="ui.mp3" preload="auto"></audio>
-        <audio id="audio-door" src="door.mp3" preload="auto"></audio>
-        <audio id="audio-paper" src="paper.mp3" preload="auto"></audio>
-        <audio id="audio-metal" src="metal.mp3" preload="auto"></audio>
-      </a-assets>
-
-      <a-sky id="main-sky" src="#img-room1" rotation="0 -90 0"></a-sky>
-
-      <a-entity camera look-controls="pointerLockEnabled: true;">
-        <a-cursor cursor="rayOrigin: entity; fuse: false" raycaster="objects: .interactive" color="#d4af37" radius-inner="0.01" radius-outer="0.02"></a-cursor>
-      </a-entity>
-
-      <a-light id="dynamic-light" type="point" color="#FFAA00" position="0 1 -2" intensity="0.6" animation="property: intensity; to: 0.3; dir: alternate; loop: true; dur: 800"></a-light>
-      
-      <a-entity id="dust-particles" visible="false">
-         <a-sphere radius="0.005" color="#FFF" opacity="0.15" position="-1.5 1 -2" animation__pos="property: position; to: -1 2.5 -1.5; dir: alternate; loop: true; dur: 12000; easing: linear" animation__fade="property: opacity; to: 0.05; dir: alternate; loop: true; dur: 3000"></a-sphere>
-         <a-sphere radius="0.008" color="#EEDDCC" opacity="0.1" position="1.5 1.5 -2.5" animation__pos="property: position; to: 0.5 1.8 -2; dir: alternate; loop: true; dur: 15000; easing: easeInOutSine" animation__fade="property: opacity; to: 0.2; dir: alternate; loop: true; dur: 4500"></a-sphere>
-         <a-sphere radius="0.006" color="#FFF" opacity="0.12" position="0 0.8 -3.5" animation__pos="property: position; to: 0.2 2 -3; dir: alternate; loop: true; dur: 18000; easing: linear" animation__fade="property: opacity; to: 0.02; dir: alternate; loop: true; dur: 4000"></a-sphere>
-         <a-sphere radius="0.01" color="#FFD700" opacity="0.08" position="0 1.2 -1.5" animation__pos="property: position; to: 0 1.5 -1.5; dir: alternate; loop: true; dur: 8000; easing: easeInOutSine"></a-sphere>
-      </a-entity>
-
-      <a-plane class="interactive" position="0 4 0" rotation="90 0 0" width="10" height="10" material="opacity: 0; transparent: true" onmouseenter="startGaze()" onmouseleave="cancelGaze()"></a-plane>
-
-      <a-circle id="hotspot-1" class="interactive" position="-1 -0.5 -4.8" radius="1.5" opacity="0" onclick="openPuzzle(1)"></a-circle>
-      
-      <a-entity id="hotspot-2" position="3 0 -2" visible="false">
-         <a-circle class="interactive" radius="1.5" opacity="0" onclick="openPuzzle(2)"></a-circle>
-         <a-sphere radius="0.08" color="#FFD700" material="emissive: #FFD700; emissiveIntensity: 0.6" opacity="0.6" animation="property: opacity; to: 0.1; dir: alternate; loop: true; dur: 1500"></a-sphere>
-      </a-entity>
-
-      <a-entity id="hotspot-3" position="-1.5 0 -3" visible="false">
-         <a-circle class="interactive" radius="1.2" opacity="0" onclick="openPuzzle(3)"></a-circle>
-         <a-sphere radius="0.08" color="#005555" material="emissive: #005555; emissiveIntensity: 0.3" opacity="0.5" animation="property: opacity; to: 0.1; dir: alternate; loop: true; dur: 2000"></a-sphere>
-      </a-entity>
-
-      <a-entity id="hotspot-finale" position="0 0 -5" visible="false">
-         <a-circle class="interactive" radius="3" opacity="0" onclick="triggerFinale()"></a-circle>
-      </a-entity>
-    </a-scene>
-
-    <script>
-      let currentLevel = 1;
-      let currentBgmId = null;
-      let audioUnlocked = false;
-
-      const tangSecrets = {
-          1: { 
-              title: "雕版印刷术的黎明与文明的火种", 
-              text: "虽然这张配图展示的是十六世纪欧洲的印刷作坊，但在人类文明的浩瀚星河中，真正的印刷先驱源自东方。早在公元七世纪的初唐时期，充满智慧的中国匠人就已经发明并开始使用木板雕刻印刷术。唐代社会经济空前繁荣，文化包容并蓄，佛教的盛行更是催生了对佛经、历法以及日常文化读物的海量需求。为了摆脱传统手抄本效率低下且容易出错的弊端，雕版印刷应运而生。工匠们将文字反刻于平整的木板上，刷上徽墨，覆以宣纸，轻轻拓印，知识便如同插上翅膀般飞入寻常百姓家。这项伟大的技术创新不仅极大地降低了文化传播的成本，打破了少数贵族阶层对教育资源的长期垄断，更为后来宋代毕昇发明活字印刷术奠定了最为坚实的基础，是中华民族对世界文明进程做出的不可磨灭的伟大贡献。", 
-              img: "Die_Buchdruckerei_by_Daniel_Chodowiecki_(150289207).jpg" 
-          },
-          2: { 
-              title: "开国之君：唐高祖李渊的霸业", 
-              text: "公元618年，隋朝末年天下大乱，烽烟四起，群雄割据逐鹿中原。出身于显赫关陇贵族集团的太原留守李渊，敏锐地洞察到天下大势，顺应历史潮流，在晋阳果断起兵。他率领大军南下，以摧枯拉朽之势攻入当时的政治中心长安，最终接受隋恭帝的禅让，正式登基称帝，定国号为唐。作为大唐帝国的绝对奠基人，唐高祖李渊不仅在建国初期展现了卓越非凡的军事统帅能力与战略眼光，在稳固政权后，更迅速采取了一系列休养生息的治国良策。他颁布了均田制与租庸调制，极大程度地恢复了遭到战火严重破坏的社会生产力；同时修订完善《唐律》，确立三省六部制，构建了高效的国家行政机器。这位往往被后世演义所低估的开国皇帝，成功平定了四方割据势力，为后世长达近三百年的大唐盛世筑牢了最为坚固的根基。", 
-              img: "TangGaozu.jpg" 
-          },
-          3: { 
-              title: "玄奘西行：丝绸之路上的文化苦旅", 
-              text: "唐朝贞观初年，高僧玄奘深感当时国内流传的佛教经典存在诸多翻译错误、文本残缺以及教义理论上的严重分歧，为了探求佛法真理，他毅然决定只身前往佛教的发源地天竺求取真经。玄奘法师历经九死一生，孤身穿越漫漫黄沙、环境极其恶劣的塔克拉玛干沙漠，翻越冰雪覆盖、高寒缺氧的葱岭，耗时十余年，行程数万里。他不仅从遥远的异国他乡带回了六百五十七部珍贵的大乘佛教梵文经典，并在归国后于长安大雁塔设立译经场，倾注毕生心血潜心翻译。更为重要的是，他将沿途亲历的西域及中亚、南亚各国的风土人情、地理面貌、历史变迁详细口述，由弟子辩机记录编纂成《大唐西域记》。这部宏伟的巨著不仅成为了后世研究古代丝绸之路的无价之宝，更让玄奘成为了中外文化交流史上最璀璨的使者。", 
-              img: "Xuanzang_w (1).jpg" 
-          }
-      };
-
-      let gazeTimer = null;
-      const loaderUI = document.getElementById('gaze-loader');
-
-      function startGaze() {
-          if (currentLevel < 1 || currentLevel > 3 || document.querySelector('.puzzle-overlay[style*="display: flex"]')) return;
-          loaderUI.style.display = 'block';
-          loaderUI.style.animation = 'spin 1s linear infinite';
-          gazeTimer = setTimeout(() => { triggerSecret(currentLevel); }, 3000);
-      }
-
-      function cancelGaze() {
-          if (gazeTimer) { clearTimeout(gazeTimer); gazeTimer = null; }
-          loaderUI.style.display = 'none';
-          loaderUI.style.animation = 'none';
-      }
-
-      function triggerSecret(level) {
-          cancelGaze(); 
-          playAudioSafe('audio-ui');
-          // 退出指针锁定，方便玩家操作 UI
-          document.exitPointerLock = document.exitPointerLock || document.mozExitPointerLock;
-          if (document.exitPointerLock) { document.exitPointerLock(); }
-
-          const data = tangSecrets[level];
-          document.getElementById('secret-title').innerText = data.title;
-          document.getElementById('secret-text').innerText = data.text;
-          
-          const safeUrl = data.img.split('/').map(segment => encodeURIComponent(segment)).join('/');
-          const imgEl = document.getElementById('secret-img');
-          imgEl.onerror = function() {
-              this.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='200'%3E%3Crect width='400' height='200' fill='%23222'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23d4af37' font-size='20' font-family='楷体'%3E[图片加载失败]%3C/text%3E%3C/svg%3E";
-          };
-          imgEl.src = safeUrl;
-          document.getElementById('secret-panel-overlay').style.display = 'flex';
-      }
-
-      function closeSecret() {
-          playAudioSafe('audio-ui');
-          document.getElementById('secret-panel-overlay').style.display = 'none';
-      }
-
-      function playAudioSafe(id, volume = 0.5) {
-          let el = document.getElementById(id);
-          if(el) { el.currentTime = 0; el.volume = volume; let p = el.play(); if(p !== undefined) p.catch(e => console.warn('Audio blocked:', e)); }
-      }
-
-      function switchBGM(nextBgmId) {
-          if (!nextBgmId || currentBgmId === nextBgmId) return;
-          let oldEl = currentBgmId ? document.getElementById(currentBgmId) : null;
-          let newEl = document.getElementById(nextBgmId);
-          let vol = 0.5;
-          let fadeOut = setInterval(() => {
-              if (vol > 0.05) { vol -= 0.05; if(oldEl) oldEl.volume = vol; } 
-              else {
-                  clearInterval(fadeOut); if(oldEl) oldEl.pause(); currentBgmId = nextBgmId;
-                  if(newEl) { newEl.volume = 0.5; newEl.play().catch(e=>console.warn(e)); }
-              }
-          }, 100);
-      }
-
-      function triggerGameOver() {
-          const ids = ['audio-bgm1', 'audio-bgm2', 'audio-bgm3', 'audio-ui', 'audio-door', 'audio-paper', 'audio-metal'];
-          ids.forEach(id => { let el = document.getElementById(id); if(el) el.pause(); });
-          document.querySelectorAll('.puzzle-overlay').forEach(el => el.style.display = 'none');
-          document.getElementById('game-over-screen').style.display = 'flex';
-          document.exitPointerLock = document.exitPointerLock || document.mozExitPointerLock;
-          if (document.exitPointerLock) { document.exitPointerLock(); }
-      }
-      
-      function triggerFinale() {
-          playAudioSafe('audio-ui');
-          document.getElementById('finale-screen').style.display = 'flex';
-          document.exitPointerLock = document.exitPointerLock || document.mozExitPointerLock;
-          if (document.exitPointerLock) { document.exitPointerLock(); }
-      }
-
-      const startBtn = document.getElementById('start-btn');
-      const startEvents = ['click', 'touchstart'];
-      
-      function initGame(e) {
-        if(e.type === 'touchstart') e.preventDefault();
-        if (!audioUnlocked) {
-            const ids = ['audio-bgm1', 'audio-bgm2', 'audio-bgm3', 'audio-ui', 'audio-door', 'audio-paper', 'audio-metal'];
-            ids.forEach(id => { let el = document.getElementById(id); if(el) { el.volume = 0; let p = el.play(); if(p !== undefined) p.then(() => { el.pause(); el.currentTime = 0; }).catch(e=>{}); } });
-            audioUnlocked = true;
-        }
-        document.getElementById('start-screen').style.display = 'none';
-        document.getElementById('transition-screen').style.opacity = '0';
-        playAudioSafe('audio-door');
-        setTimeout(() => { currentBgmId = 'audio-bgm1'; let bgm1 = document.getElementById('audio-bgm1'); if(bgm1) { bgm1.volume = 0.5; bgm1.play().catch(e=>{}); } }, 1500);
-      }
-
-      startEvents.forEach(evt => startBtn.addEventListener(evt, initGame, {passive: false}));
-
-      function openPuzzle(num) { 
-          if (num !== currentLevel) return; 
-          playAudioSafe('audio-ui'); 
-          document.exitPointerLock = document.exitPointerLock || document.mozExitPointerLock;
-          if (document.exitPointerLock) { document.exitPointerLock(); }
-          document.getElementById('puzzle-' + num).style.display = 'flex'; 
-      }
-      
-      function closePuzzle(num) { playAudioSafe('audio-ui'); document.getElementById('puzzle-' + num).style.display = 'none'; }
-
-      function checkAnswer1(result) {
-        if (result === 'correct') {
-          playAudioSafe('audio-ui'); closePuzzle(1);
-          startTransition('机关轰鸣，天旋地转...', '#img-room2', 'hotspot-1', 'hotspot-2', '轰隆隆...\n石壁裂开，你进入了【胡商藏经阁】', 2, null, null);
-        } else { triggerGameOver(); }
-      }
-
-      function checkAnswer2(result) {
-        if (result === 'correct') {
-          playAudioSafe('audio-ui'); closePuzzle(2);
-          startTransition('丝帛燃烧，书架缓缓移开...', '#img-room3', 'hotspot-2', 'hotspot-3', '你发现了深渊底部的【青铜机关室】！', 3, 'audio-bgm2', 'audio-paper');
-        } else { triggerGameOver(); }
-      }
-
-      function checkAnswer3(result) {
-        if (result === 'correct') {
-          playAudioSafe('audio-ui'); closePuzzle(3);
-          startTransition('青铜巨门缓缓开启，万丈佛光倾泻而出...', '#img-room4', 'hotspot-3', null, '震撼！触摸大佛，获取终极奖励！', 4, 'audio-bgm3', 'audio-metal');
-        } else { triggerGameOver(); }
-      }
-
-      function startTransition(transTextMsg, nextImageId, oldHotspotId, newHotspotId, successMsg, nextLevelNum, nextBgmTargetId, transSfxId) {
-        const transScreen = document.getElementById('transition-screen');
-        const transText = document.getElementById('trans-text');
-        const dynLight = document.getElementById('dynamic-light');
-        const dustFx = document.getElementById('dust-particles');
-        
-        cancelGaze(); 
-        
-        transText.innerText = transTextMsg; 
-        transScreen.style.opacity = '1';
-        transScreen.style.pointerEvents = 'auto'; 
-        currentLevel = -1; 
-        
-        if(transSfxId) playAudioSafe(transSfxId); 
-
-        setTimeout(() => { transText.style.opacity = '1'; }, 800);
-
-        setTimeout(() => {
-          if(nextImageId) document.getElementById('main-sky').setAttribute('src', nextImageId); 
-          if (nextBgmTargetId) switchBGM(nextBgmTargetId);
-
-          if (nextLevelNum === 3) {
-              dynLight.setAttribute('color', '#00FFFF');
-          } else if (nextLevelNum === 4) {
-              dynLight.setAttribute('visible', 'false');
-              dustFx.setAttribute('visible', 'true');
-              const spheres = dustFx.querySelectorAll('a-sphere');
-              spheres.forEach(sphere => {
-                  sphere.setAttribute('color', '#FFD700');
-                  sphere.setAttribute('opacity', '0.8');
-                  sphere.setAttribute('radius', '0.02'); 
-              });
-              
-              let finaleHotspot = document.getElementById('hotspot-finale');
-              finaleHotspot.setAttribute('visible', 'true');
-              setTimeout(() => { 
-                  let clickArea = finaleHotspot.querySelector('a-circle');
-                  if(clickArea) clickArea.classList.add('interactive'); 
-              }, 150);
-          }
-
-          if(oldHotspotId) {
-            let oldEl = document.getElementById(oldHotspotId);
-            oldEl.setAttribute('visible', 'false'); 
-            let clickArea = oldEl.tagName === 'A-CIRCLE' ? oldEl : oldEl.querySelector('a-circle');
-            if (clickArea) clickArea.classList.remove('interactive'); 
-          }
-
-          if(newHotspotId) {
-            let newEl = document.getElementById(newHotspotId);
-            newEl.setAttribute('visible', 'true');
-            setTimeout(() => { 
-              let clickArea = newEl.tagName === 'A-CIRCLE' ? newEl : newEl.querySelector('a-circle');
-              if(clickArea) { clickArea.classList.remove('interactive'); void clickArea.offsetWidth; clickArea.classList.add('interactive'); }
-            }, 150);
-          }
-        }, 1800);
-
-        setTimeout(() => {
-          transText.style.opacity = '0';
-          transScreen.style.opacity = '0';
-          transScreen.style.pointerEvents = 'none'; 
-          
-          currentLevel = nextLevelNum;
-          if (currentLevel === 4) {
-             document.getElementById('msg').style.background = 'rgba(212, 175, 55, 0.9)';
-             document.getElementById('msg').style.color = '#000';
-          }
-          setTimeout(() => { showMsg(successMsg); }, 1500);
-        }, 4000);
-      }
-
-      function showMsg(text) { 
-          const box = document.getElementById('msg'); box.innerText = text; box.style.display = 'block'; 
-          if(currentLevel !== 4) setTimeout(() => { box.style.display = 'none'; }, 3500); 
-      }
-
-      function stayInRoom() {
-          playAudioSafe('audio-ui');
-          document.getElementById('finale-screen').style.display = 'none';
-      }
-
-      function restartGame() {
-          playAudioSafe('audio-ui');
-          const ids = ['audio-bgm1', 'audio-bgm2', 'audio-bgm3', 'audio-ui', 'audio-door', 'audio-paper', 'audio-metal'];
-          ids.forEach(id => { let el = document.getElementById(id); if(el) { el.pause(); el.currentTime = 0; } });
-          currentBgmId = null; audioUnlocked = false; 
-
-          document.querySelectorAll('.puzzle-overlay').forEach(el => el.style.display = 'none');
-          document.getElementById('game-over-screen').style.display = 'none';
-          document.getElementById('finale-screen').style.display = 'none';
-
-          currentLevel = 1; cancelGaze();
-
-          document.getElementById('main-sky').setAttribute('src', '#img-room1');
-          const dynLight = document.getElementById('dynamic-light');
-          dynLight.setAttribute('visible', 'true'); dynLight.setAttribute('color', '#FFAA00');
-          document.getElementById('dust-particles').setAttribute('visible', 'false');
-
-          let h1 = document.getElementById('hotspot-1');
-          h1.setAttribute('visible', 'true');
-          h1.classList.add('interactive');
-
-          ['hotspot-2', 'hotspot-3'].forEach(id => {
-              let el = document.getElementById(id); 
-              el.setAttribute('visible', 'false');
-              let clickArea = el.querySelector('a-circle'); 
-              if (clickArea) clickArea.classList.remove('interactive');
-          });
-          
-          let finaleHotspot = document.getElementById('hotspot-finale');
-          finaleHotspot.setAttribute('visible', 'false');
-          let fClickArea = finaleHotspot.querySelector('a-circle');
-          if (fClickArea) fClickArea.classList.remove('interactive');
-
-          let msgBox = document.getElementById('msg');
-          msgBox.style.background = 'rgba(15, 8, 3, 0.9)';
-          msgBox.style.color = '#fff';
-          msgBox.style.display = 'none';
-
-          document.getElementById('start-screen').style.display = 'flex';
-      }
-
-      // PC 端快捷键绑定：按 ESC 键即可关闭所有已打开的面板
-      document.addEventListener('keydown', function(event) {
-          if (event.key === 'Escape') {
-              if (document.getElementById('secret-panel-overlay').style.display === 'flex') {
-                  closeSecret();
-              }
-              for (let i = 1; i <= 3; i++) {
-                  if (document.getElementById('puzzle-' + i).style.display === 'flex') {
-                      closePuzzle(i);
-                  }
-              }
-          }
-      });
-    </script>
-  </body>
-</html>
+          <img id="secret-img" src="" alt="Secret Imagehttp://googleusercontent.com/image_generation_content/0
