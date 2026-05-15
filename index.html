@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>寻宝洛阳 - 终极纯净受控版</title>
+    <title>寻宝洛阳 - 严密逻辑最终版</title>
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <style>
       body { font-family: '楷体', 'STKaiti', serif; margin: 0; overflow: hidden; background: #000; touch-action: none; }
@@ -41,7 +41,6 @@
       .transition-text { color: #d4af37; font-size: 20px; letter-spacing: 3px; opacity: 0; transition: opacity 1s ease-in-out; text-shadow: 0 0 10px #d4af37; text-align: center; padding: 0 20px;}
       #compass { position: absolute; bottom: 30px; left: 20px; z-index: 10; color: #d4af37; font-size: 14px; width: 50px; height: 50px; border: 1px solid #d4af37; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.4); }
       
-      /* 【防御堡垒】：绝对受控的自定义原生全屏按钮 */
       #fs-btn { position: absolute; bottom: 20px; right: 20px; z-index: 9999; cursor: pointer; background: rgba(0,0,0,0.5); border: 2px solid #d4af37; border-radius: 8px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease;}
       #fs-btn:hover { background: rgba(212, 175, 55, 0.3); transform: scale(1.1); }
       #fs-btn svg { width: 24px; height: 24px; stroke: #d4af37; stroke-width: 2; fill: none; }
@@ -163,17 +162,17 @@
       <a-circle id="hotspot-1" class="interactive" position="-1 -0.5 -4.8" radius="1.5" opacity="0" onclick="openPuzzle(1)"></a-circle>
       
       <a-entity id="hotspot-2" position="3 0 -2" visible="false">
-         <a-circle class="interactive" radius="1.5" opacity="0" onclick="openPuzzle(2)"></a-circle>
+         <a-circle radius="1.5" opacity="0" onclick="openPuzzle(2)"></a-circle>
          <a-sphere radius="0.08" color="#FFD700" material="emissive: #FFD700; emissiveIntensity: 0.6" opacity="0.6" animation="property: opacity; to: 0.1; dir: alternate; loop: true; dur: 1500"></a-sphere>
       </a-entity>
 
       <a-entity id="hotspot-3" position="-1.5 0 -3" visible="false">
-         <a-circle class="interactive" radius="1.2" opacity="0" onclick="openPuzzle(3)"></a-circle>
+         <a-circle radius="1.2" opacity="0" onclick="openPuzzle(3)"></a-circle>
          <a-sphere radius="0.08" color="#005555" material="emissive: #005555; emissiveIntensity: 0.3" opacity="0.5" animation="property: opacity; to: 0.1; dir: alternate; loop: true; dur: 2000"></a-sphere>
       </a-entity>
 
       <a-entity id="hotspot-finale" position="0 0 -5" visible="false">
-         <a-circle class="interactive" radius="3" opacity="0" onclick="triggerFinale()"></a-circle>
+         <a-circle radius="3" opacity="0" onclick="triggerFinale()"></a-circle>
       </a-entity>
     </a-scene>
 
@@ -181,7 +180,6 @@
       let currentLevel = 1;
       let currentBgmId = null;
 
-      // 【权限沙箱】：唯一的原生全屏控制逻辑
       function toggleFullScreen() {
         if (!document.fullscreenElement) {
             document.documentElement.requestFullscreen().catch(err => {
@@ -272,6 +270,9 @@
       }
       
       function triggerFinale() {
+          // 【核心防护】：状态机死锁，防止由于射线重叠造成的无视关卡越权通关
+          if (currentLevel !== 4) return; 
+
           playAudioSafe('audio-ui');
           document.getElementById('finale-screen').style.display = 'flex';
           forceExitPointerLock();
