@@ -3,39 +3,23 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>寻宝洛阳 - 严密逻辑最终版</title>
+    <title>寻宝洛阳 - 沉浸式 3D 空间重制版</title>
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <style>
       body { font-family: '楷体', 'STKaiti', serif; margin: 0; overflow: hidden; background: #000; touch-action: none; }
-      #ui { position: absolute; top: 10%; left: 50%; transform: translateX(-50%); z-index: 10; color: #fff; text-align: center; width: 90%; pointer-events: none; }
-      .msg-box { background: rgba(15, 8, 3, 0.9); padding: 15px 25px; border-radius: 8px; display: none; font-size: 20px; border: 1px solid #d4af37; box-shadow: 0 0 15px #d4af37;}
+      #ui { position: absolute; top: 10%; left: 50%; transform: translateX(-50%); z-index: 10; color: #fff; text-align: center; width: 90%; pointer-events: none; display: flex; flex-direction: column; align-items: center; gap: 15px;}
       
+      /* 优化提示框，增加毛玻璃效果 */
+      .msg-box { background: rgba(15, 8, 3, 0.85); backdrop-filter: blur(5px); padding: 15px 30px; border-radius: 8px; display: none; font-size: 20px; border: 1px solid #d4af37; box-shadow: 0 0 20px rgba(212, 175, 55, 0.5); letter-spacing: 2px;}
+      
+      /* 环境叙事（彩蛋）专属 UI */
+      .lore-box { background: rgba(10, 20, 30, 0.85); backdrop-filter: blur(5px); padding: 15px 30px; border-radius: 8px; display: none; font-size: 18px; color: #a0c0d0; border: 1px solid #5f9ea0; box-shadow: 0 0 20px rgba(95, 158, 160, 0.5); font-style: italic; max-width: 600px;}
+      .lore-title { color: #5f9ea0; font-weight: bold; font-size: 20px; margin-bottom: 8px; font-style: normal;}
+
       .puzzle-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 999; flex-direction: column; align-items: center; justify-content: center; }
       .puzzle-board { border-radius: 10px; padding: 25px; text-align: center; width: 85%; max-width: 650px; position: relative; box-sizing: border-box; }
-      .puzzle-title { font-size: 24px; margin-bottom: 12px; font-weight: bold; padding-bottom: 8px; letter-spacing: 2px;}
-      .poem-text { font-size: 20px; text-align: center; margin: 15px 0; letter-spacing: 2px; font-weight: bold; line-height: 1.4;}
-      .poem-desc { font-size: 16px; margin-bottom: 20px; line-height: 1.5;}
       .option-btn { display: block; width: 100%; padding: 12px; font-size: 18px; font-family: '楷体'; border-radius: 5px; cursor: pointer; margin-bottom: 12px; transition: all 0.1s; box-sizing: border-box; pointer-events: auto;}
       .option-btn:active { transform: scale(0.98); }
-      .close-btn { position: absolute; top: 8px; right: 12px; font-size: 24px; cursor: pointer; pointer-events: auto;}
-
-      #board-1 { background: #2c1e16; border: 3px solid #d4af37; box-shadow: 0 0 40px #000; }
-      #board-1 .puzzle-title, #board-1 .close-btn { color: #d4af37; border-color: #d4af37; }
-      #board-1 .poem-desc { color: #eeddcc; } #board-1 .poem-text { color: #fff; }
-      #board-1 .option-btn { background: linear-gradient(180deg, #4a2e1b 0%, #2a1609 100%); color: #eeddcc; border: 1px solid #d4af37; }
-      #board-1 .option-btn:hover { background: #d4af37; color: #000; }
-
-      #board-2 { background: #e8dcc7; border: 3px solid #8b4513; box-shadow: 0 0 40px rgba(139,69,19,0.5); }
-      #board-2 .puzzle-title, #board-2 .close-btn { color: #8b4513; border-color: #8b4513; }
-      #board-2 .poem-desc { color: #333; } #board-2 .poem-text { color: #800000; }
-      #board-2 .option-btn { background: #f4ead5; color: #5c3a21; border: 1px solid #8b4513; }
-      #board-2 .option-btn:hover { background: #d4af37; color: #fff; }
-
-      #board-3 { background: #1a252c; border: 3px solid #5f9ea0; box-shadow: 0 0 40px rgba(95,158,160,0.5); }
-      #board-3 .puzzle-title, #board-3 .close-btn { color: #5f9ea0; border-color: #5f9ea0; }
-      #board-3 .poem-desc { color: #a0b8b8; } #board-3 .poem-text { color: #e0ffff; }
-      #board-3 .option-btn { background: #2f4f4f; color: #e0ffff; border: 1px solid #5f9ea0; }
-      #board-3 .option-btn:hover { background: #5f9ea0; color: #fff; }
 
       #transition-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 1000; opacity: 1; pointer-events: none; transition: opacity 1.5s ease-in-out; display: flex; flex-direction: column; align-items: center; justify-content: center; }
       .transition-text { color: #d4af37; font-size: 20px; letter-spacing: 3px; opacity: 0; transition: opacity 1s ease-in-out; text-shadow: 0 0 10px #d4af37; text-align: center; padding: 0 20px;}
@@ -56,20 +40,8 @@
         100% { box-shadow: 0 0 20px rgba(212, 175, 55, 0.5) inset, 0 0 35px rgba(212, 175, 55, 0.6); text-shadow: 0 0 15px rgba(212, 175, 55, 1); }
       }
 
-      #game-over-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; }
-      .death-msg { color: #8b0000; font-family: '楷体', 'STKaiti', serif; text-align: center; animation: fadeBlood 4s forwards; }
-      .death-main { font-size: 35px; letter-spacing: 5px; margin-bottom: 20px; text-shadow: 0 0 20px #8b0000; font-weight: bold; }
-      .death-sub { font-size: 18px; color: #555; letter-spacing: 2px; }
-      @keyframes fadeBlood { 0% { opacity: 0; transform: scale(0.9); } 50% { opacity: 1; transform: scale(1); } 100% { opacity: 1; transform: scale(1); } }
-
-      #secret-panel { background: #222; border: 2px solid #d4af37; box-shadow: 0 0 50px rgba(212, 175, 55, 0.4); width: 85%; max-width: 650px; padding: 15px; max-height: 80vh; overflow-y: auto; pointer-events: auto;}
-      .secret-announcement { color: #ffeb3b; font-size: 22px; margin-bottom: 15px; font-weight: bold; text-shadow: 0 0 10px #ffeb3b; }
-      .secret-content img { max-width: 100%; max-height: 200px; border-radius: 5px; border: 1px solid #555; margin-bottom: 15px; }
-      .secret-title { color: #d4af37; font-size: 20px; margin-bottom: 10px; }
-      .secret-text { color: #ccc; font-size: 16px; line-height: 1.5; text-align: left; }
-      
-      #gaze-loader { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 40px; height: 40px; border: 4px solid transparent; border-top-color: #d4af37; border-radius: 50%; z-index: 100; display: none; pointer-events: none;}
-      @keyframes spin { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(360deg); } }
+      /* 通关白屏特效预设 */
+      #supernova-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #FFF; z-index: 998; opacity: 0; pointer-events: none; transition: opacity 2s ease-in; }
     </style>
   </head>
   <body>
@@ -84,48 +56,30 @@
       <div class="game-title">寻宝洛阳</div>
       <button id="start-btn" onclick="initGame(event)">触碰石门，进入地宫</button>
     </div>
-
-    <div id="game-over-screen">
-      <div class="death-msg">
-        <div class="death-main">线索错误，坠入迷局</div>
-        <div class="death-sub">密室机关闭合... 缺氧 Died.</div>
-      </div>
-    </div>
     
+    <div id="supernova-screen"></div>
+
     <div id="finale-screen" class="puzzle-overlay" style="background: rgba(10, 5, 0, 0.9);">
       <div class="puzzle-board" style="background: transparent; border: none; box-shadow: none; width: 95%; max-width: 800px;">
-        <div class="death-main" style="color: #FFD700; text-shadow: 0 0 30px #FFD700, 0 0 10px #FFF; font-size: 32px;">寻宝圆满，名留青史</div>
-        <div class="death-sub" style="color: #EEDDCC; font-size: 16px; line-height: 1.6; margin-bottom: 30px;">
+        <div style="color: #FFD700; text-shadow: 0 0 30px #FFD700, 0 0 10px #FFF; font-size: 35px; letter-spacing: 5px; margin-bottom: 20px; font-weight: bold;">寻宝圆满，名留青史</div>
+        <div style="color: #EEDDCC; font-size: 16px; line-height: 1.6; margin-bottom: 30px;">
           你成功破解了所有机关，唤醒了沉睡的洛阳记忆。<br>
           大唐的辉煌与西域的驼铃，都已刻入你的灵魂。<br>
           <span style="color: #FFD700; font-weight: bold;">【终极奖励解锁：洛阳风物图鉴与荣誉守陵人称号】</span>
         </div>
         <div style="display: flex; justify-content: center; gap: 15px; flex-direction: row; flex-wrap: wrap;">
-          <button class="option-btn" style="background: #d4af37; color: #000; border: 2px solid #FFF; font-weight: bold; width: 45%; margin: 0;" onclick="restartGame()">再入轮回<br><span style="font-size: 14px;">(重新开始)</span></button>
-          <button class="option-btn" style="background: rgba(40, 20, 10, 0.8); color: #d4af37; border: 2px solid #d4af37; font-weight: bold; width: 45%; margin: 0;" onclick="stayInRoom()">驻留此地<br><span style="font-size: 14px;">(继续探索)</span></button>
+          <button class="option-btn" style="background: #d4af37; color: #000; border: 2px solid #FFF; font-weight: bold; width: 45%; margin: 0;" onclick="restartGame()">再入轮回</button>
+          <button class="option-btn" style="background: rgba(40, 20, 10, 0.8); color: #d4af37; border: 2px solid #d4af37; font-weight: bold; width: 45%; margin: 0;" onclick="stayInRoom()">驻留此地</button>
         </div>
       </div>
     </div>
 
-    <div id="ui"><div id="msg" class="msg-box"></div><div id="gaze-loader"></div></div>
+    <div id="ui">
+        <div id="msg" class="msg-box"></div>
+        <div id="lore" class="lore-box"></div>
+    </div>
     <div id="transition-screen"><div id="trans-text" class="transition-text"></div></div>
     <div id="compass">寻龙点穴</div>
-
-    <div id="puzzle-1" class="puzzle-overlay"><div id="board-1" class="puzzle-board"><div class="close-btn" onclick="closePuzzle(1)">✖</div><div class="puzzle-title">龙纹石门机关</div><div class="poem-desc">暗道尽头的凹槽，须对出暗号：</div><div class="poem-text">“洛阳亲友如相问，<br>_____________。”</div><button class="option-btn" onclick="checkAnswer1('wrong')">A. 不及汪伦送我情</button><button class="option-btn" onclick="checkAnswer1('correct')">B. 一片冰心在玉壶</button><button class="option-btn" onclick="checkAnswer1('wrong')">C. 孤帆远影碧空尽</button><button class="option-btn" onclick="checkAnswer1('wrong')">D. 天涯若比邻</button></div></div>
-    <div id="puzzle-2" class="puzzle-overlay"><div id="board-2" class="puzzle-board"><div class="close-btn" onclick="closePuzzle(2)">✖</div><div class="puzzle-title">西域商路密卷</div><div class="poem-desc">唯有对出口令方可开启密道：</div><div class="poem-text">“劝君更尽一杯酒，<br>西出____无故人。”</div><button class="option-btn" onclick="checkAnswer2('wrong')">A. 雁门</button><button class="option-btn" onclick="checkAnswer2('correct')">B. 阳关</button><button class="option-btn" onclick="checkAnswer2('wrong')">C. 玉门</button><button class="option-btn" onclick="checkAnswer2('wrong')">D. 楼兰</button></div></div>
-    <div id="puzzle-3" class="puzzle-overlay"><div id="board-3" class="puzzle-board"><div class="close-btn" onclick="closePuzzle(3)">✖</div><div class="puzzle-title">青铜八卦锁</div><div class="poem-desc">破解天干之谜以倒转齿轮：</div><div class="poem-text">“天干地支中，‘甲’对应的五行是？”</div><button class="option-btn" onclick="checkAnswer3('wrong')">A. 金</button><button class="option-btn" onclick="checkAnswer3('correct')">B. 木</button><button class="option-btn" onclick="checkAnswer3('wrong')">C. 水</button><button class="option-btn" onclick="checkAnswer3('wrong')">D. 火</button></div></div>
-
-    <div id="secret-panel-overlay" class="puzzle-overlay">
-      <div id="secret-panel" class="puzzle-board">
-        <div class="close-btn" style="color:#d4af37;" onclick="closeSecret()">✖</div>
-        <div class="secret-announcement">福运当头，你找到了唐朝秘闻</div>
-        <div class="secret-content">
-          <img id="secret-img" src="" alt="Secret Image">
-          <div id="secret-title" class="secret-title"></div>
-          <div id="secret-text" class="secret-text"></div>
-        </div>
-      </div>
-    </div>
 
     <a-scene vr-mode-ui="enabled: false" renderer="colorManagement: true; antialias: true;">
       <a-assets>
@@ -145,101 +99,62 @@
       <a-sky id="main-sky" src="#img-room1" rotation="0 -90 0"></a-sky>
 
       <a-entity camera look-controls="pointerLockEnabled: true;" position="0 1.6 0">
-        <a-cursor color="#d4af37" radius-inner="0.01" radius-outer="0.02" raycaster="objects: .interactive"></a-cursor>
+        <a-cursor color="#d4af37" radius-inner="0.01" radius-outer="0.02" raycaster="objects: .interactive"
+          animation__scale_enter="property: scale; to: 1.8 1.8 1.8; startEvents: mouseenter; dur: 150"
+          animation__scale_leave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 150">
+        </a-cursor>
       </a-entity>
 
       <a-light id="dynamic-light" type="point" color="#FFAA00" position="0 1 -2" intensity="0.6" animation="property: intensity; to: 0.3; dir: alternate; loop: true; dur: 800"></a-light>
       
       <a-entity id="dust-particles" visible="false">
-         <a-sphere radius="0.005" color="#FFF" opacity="0.15" position="-1.5 1 -2" animation__pos="property: position; to: -1 2.5 -1.5; dir: alternate; loop: true; dur: 12000; easing: linear" animation__fade="property: opacity; to: 0.05; dir: alternate; loop: true; dur: 3000"></a-sphere>
-         <a-sphere radius="0.008" color="#EEDDCC" opacity="0.1" position="1.5 1.5 -2.5" animation__pos="property: position; to: 0.5 1.8 -2; dir: alternate; loop: true; dur: 15000; easing: easeInOutSine" animation__fade="property: opacity; to: 0.2; dir: alternate; loop: true; dur: 4500"></a-sphere>
-         <a-sphere radius="0.006" color="#FFF" opacity="0.12" position="0 0.8 -3.5" animation__pos="property: position; to: 0.2 2 -3; dir: alternate; loop: true; dur: 18000; easing: linear" animation__fade="property: opacity; to: 0.02; dir: alternate; loop: true; dur: 4000"></a-sphere>
+         <a-sphere radius="0.005" color="#FFF" opacity="0.15" position="-1.5 1 -2" animation__pos="property: position; to: -1 2.5 -1.5; dir: alternate; loop: true; dur: 12000; easing: linear"></a-sphere>
+         <a-sphere radius="0.008" color="#EEDDCC" opacity="0.1" position="1.5 1.5 -2.5" animation__pos="property: position; to: 0.5 1.8 -2; dir: alternate; loop: true; dur: 15000; easing: easeInOutSine"></a-sphere>
+         <a-sphere radius="0.006" color="#FFF" opacity="0.12" position="0 0.8 -3.5" animation__pos="property: position; to: 0.2 2 -3; dir: alternate; loop: true; dur: 18000; easing: linear"></a-sphere>
          <a-sphere radius="0.01" color="#FFD700" opacity="0.08" position="0 1.2 -1.5" animation__pos="property: position; to: 0 1.5 -1.5; dir: alternate; loop: true; dur: 8000; easing: easeInOutSine"></a-sphere>
       </a-entity>
 
-      <a-plane class="interactive" position="0 4 0" rotation="90 0 0" width="10" height="10" material="opacity: 0; transparent: true" onmouseenter="startGaze()" onmouseleave="cancelGaze()"></a-plane>
-
-      <a-circle id="hotspot-1" class="interactive" position="-1 -0.5 -4.8" radius="1.5" opacity="0" onclick="openPuzzle(1)"></a-circle>
-      
-      <a-entity id="hotspot-2" position="3 0 -2" visible="false">
-         <a-circle radius="1.5" opacity="0" onclick="openPuzzle(2)"></a-circle>
-         <a-sphere radius="0.08" color="#FFD700" material="emissive: #FFD700; emissiveIntensity: 0.6" opacity="0.6" animation="property: opacity; to: 0.1; dir: alternate; loop: true; dur: 1500"></a-sphere>
+      <a-entity id="level-1-entities">
+        <a-circle id="hotspot-1" class="interactive" position="-1 -0.5 -4.8" radius="1.5" opacity="0" onclick="hitDoor(1)"></a-circle>
+        <a-torus id="key-1" class="interactive" position="3 -1 2" rotation="0 45 0" radius="0.15" radius-tubular="0.03" color="#3CB371" material="emissive: #3CB371; emissiveIntensity: 0.5" animation="property: rotation; to: 0 405 0; loop: true; dur: 4000; easing: linear" onclick="hitKey(1)"></a-torus>
+        <a-octahedron class="interactive" position="-2 -1.5 3" radius="0.08" color="#5f9ea0" material="emissive: #5f9ea0; emissiveIntensity: 0.8" animation="property: position; to: -2 -1.4 3; dir: alternate; loop: true; dur: 2000" onclick="showLore('摸金绝笔', '这地宫根本不是宝库，而是个吞噬活人的陷阱！老王刚刚还在我身后，一转眼就没影了...')"></a-octahedron>
       </a-entity>
 
-      <a-entity id="hotspot-3" position="-1.5 0 -3" visible="false">
-         <a-circle radius="1.2" opacity="0" onclick="openPuzzle(3)"></a-circle>
-         <a-sphere radius="0.08" color="#005555" material="emissive: #005555; emissiveIntensity: 0.3" opacity="0.5" animation="property: opacity; to: 0.1; dir: alternate; loop: true; dur: 2000"></a-sphere>
+      <a-entity id="level-2-entities" visible="false">
+         <a-circle id="hotspot-2" radius="1.5" position="3 0 -2" opacity="0" onclick="hitDoor(2)"></a-circle>
+         <a-cylinder id="key-2" position="-2 0 3" rotation="30 45 10" radius="0.05" height="0.4" color="#d4af37" material="emissive: #d4af37; emissiveIntensity: 0.4" animation="property: position; to: -2 0.2 3; dir: alternate; loop: true; dur: 1500" onclick="hitKey(2)"></a-cylinder>
+         <a-octahedron class="interactive" position="1 -1 -3" radius="0.08" color="#5f9ea0" material="emissive: #5f9ea0; emissiveIntensity: 0.8" animation="property: position; to: 1 -0.9 -3; dir: alternate; loop: true; dur: 2000" onclick="showLore('西域商贾的羊皮纸', '丝绸之路的尽头，不仅有黄金，还有无尽的杀戮。那帮马贼离我不远了，愿佛祖保佑。')"></a-octahedron>
+      </a-entity>
+
+      <a-entity id="level-3-entities" visible="false">
+         <a-circle id="hotspot-3" radius="1.2" position="-1.5 0 -3" opacity="0" onclick="hitDoor(3)"></a-circle>
+         <a-dodecahedron id="key-3" position="2 1.5 2" radius="0.15" color="#FF4500" material="emissive: #FF4500; emissiveIntensity: 0.6" animation="property: rotation; to: 360 360 0; loop: true; dur: 5000; easing: linear" onclick="hitKey(3)"></a-dodecahedron>
       </a-entity>
 
       <a-entity id="hotspot-finale" position="0 0 -5" visible="false">
          <a-circle radius="3" opacity="0" onclick="triggerFinale()"></a-circle>
       </a-entity>
+
     </a-scene>
 
     <script>
       let currentLevel = 1;
       let currentBgmId = null;
+      let loreTimer = null;
 
       function toggleFullScreen() {
         if (!document.fullscreenElement) {
             document.documentElement.requestFullscreen().catch(err => {
-                console.log(`全屏请求被拦截: ${err.message}`);
+                console.log(`全屏被拦截: ${err.message}`);
             });
         } else {
-            if (document.exitFullscreen) {
-                document.exitFullscreen();
-            }
+            if (document.exitFullscreen) document.exitFullscreen();
         }
-      }
-
-      const tangSecrets = {
-          1: { title: "雕版印刷术的黎明与文明的火种", text: "虽然这张配图展示的是十六世纪欧洲的印刷作坊，但在人类文明的浩瀚星河中，真正的印刷先驱源自东方。早在公元七世纪的初唐时期，充满智慧的中国匠人就已经发明并开始使用木板雕刻印刷术。唐代社会经济空前繁荣，文化包容并蓄，佛教的盛行更是催生了对佛经、历法以及日常文化读物的海量需求。为了摆脱传统手抄本效率低下且容易出错的弊端，雕版印刷应运而生。工匠们将文字反刻于平整的木板上，刷上徽墨，覆以宣纸，轻轻拓印，知识便如同插上翅膀般飞入寻常百姓家。这项伟大的技术创新不仅极大地降低了文化传播的成本，打破了少数贵族阶层对教育资源的长期垄断，更为后来宋代毕昇发明活字印刷术奠定了最为坚实的基础，是中华民族对世界文明进程做出的不可磨灭的伟大贡献。", img: "Die_Buchdruckerei_by_Daniel_Chodowiecki_(150289207).jpg" },
-          2: { title: "开国之君：唐高祖李渊的霸业", text: "公元618年，隋朝末年天下大乱，烽烟四起，群雄割据逐鹿中原。出身于显赫关陇贵族集团的太原留守李渊，敏锐地洞察到天下大势，顺应历史潮流，在晋阳果断起兵。他率领大军南下，以摧枯拉朽之势攻入当时的政治中心长安，最终接受隋恭帝的禅让，正式登基称帝，定国号为唐。作为大唐帝国的绝对奠基人，唐高祖李渊不仅在建国初期展现了卓越非凡的军事统帅能力与战略眼光，在稳固政权后，更迅速采取了一系列休养生息的治国良策。他颁布了均田制与租庸调制，极大程度地恢复了遭到战火严重破坏的社会生产力；同时修订完善《唐律》，确立三省六部制，构建了高效的国家行政机器。这位往往被后世演义所低估的开国皇帝，成功平定了四方割据势力，为后世长达近三百年的大唐盛世筑牢了最为坚固的根基。", img: "TangGaozu.jpg" },
-          3: { title: "玄奘西行：丝绸之路上的文化苦旅", text: "唐朝贞观初年，高僧玄奘深感当时国内流传的佛教经典存在诸多翻译错误、文本残缺以及教义理论上的严重分歧，为了探求佛法真理，他毅然决定只身前往佛教的发源地天竺求取真经。玄奘法师历经九死一生，孤身穿越漫漫黄沙、环境极其恶劣的塔克拉玛干沙漠，翻越冰雪覆盖、高寒缺氧的葱岭，耗时十余年，行程数万里。他不仅从遥远的异国他乡带回了六百五十七部珍贵的大乘佛教梵文经典，并在归国后于长安大雁塔设立译经场，倾注毕生心血潜心翻译。更为重要的是，他将沿途亲历的西域及中亚、南亚各国的风土人情、地理面貌、历史变迁详细口述，由弟子辩机记录编纂成《大唐西域记》。这部宏伟的巨著不仅成为了后世研究古代丝绸之路的无价之宝，更让玄奘成为了中外文化交流史上最璀璨的使者。", img: "Xuanzang_w (1).jpg" }
-      };
-
-      let gazeTimer = null;
-      const loaderUI = document.getElementById('gaze-loader');
-
-      function startGaze() {
-          if (currentLevel < 1 || currentLevel > 3 || document.querySelector('.puzzle-overlay[style*="display: flex"]')) return;
-          loaderUI.style.display = 'block';
-          loaderUI.style.animation = 'spin 1s linear infinite';
-          gazeTimer = setTimeout(() => { triggerSecret(currentLevel); }, 3000);
-      }
-
-      function cancelGaze() {
-          if (gazeTimer) { clearTimeout(gazeTimer); gazeTimer = null; }
-          loaderUI.style.display = 'none';
-          loaderUI.style.animation = 'none';
       }
 
       function forceExitPointerLock() {
           document.exitPointerLock = document.exitPointerLock || document.mozExitPointerLock || document.webkitExitPointerLock;
           if (document.exitPointerLock) { document.exitPointerLock(); }
-      }
-
-      function triggerSecret(level) {
-          cancelGaze(); 
-          playAudioSafe('audio-ui');
-          forceExitPointerLock(); 
-
-          const data = tangSecrets[level];
-          document.getElementById('secret-title').innerText = data.title;
-          document.getElementById('secret-text').innerText = data.text;
-          
-          const safeUrl = data.img.split('/').map(segment => encodeURIComponent(segment)).join('/');
-          const imgEl = document.getElementById('secret-img');
-          imgEl.onerror = function() {
-              this.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='200'%3E%3Crect width='400' height='200' fill='%23222'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23d4af37' font-size='20' font-family='楷体'%3E[图片加载失败]%3C/text%3E%3C/svg%3E";
-          };
-          imgEl.src = safeUrl;
-          document.getElementById('secret-panel-overlay').style.display = 'flex';
-      }
-
-      function closeSecret() {
-          playAudioSafe('audio-ui');
-          document.getElementById('secret-panel-overlay').style.display = 'none';
       }
 
       function playAudioSafe(id, volume = 0.5) {
@@ -256,34 +171,30 @@
               if (vol > 0.05) { vol -= 0.05; if(oldEl) oldEl.volume = vol; } 
               else {
                   clearInterval(fadeOut); if(oldEl) oldEl.pause(); currentBgmId = nextBgmId;
-                  if(newEl) { newEl.volume = 0.5; newEl.play().catch(e=>console.warn(e)); }
+                  if(newEl) { newEl.volume = 0.5; newEl.play().catch(e=>{}); }
               }
           }, 100);
       }
 
-      function triggerGameOver() {
-          const ids = ['audio-bgm1', 'audio-bgm2', 'audio-bgm3', 'audio-ui', 'audio-door', 'audio-paper', 'audio-metal'];
-          ids.forEach(id => { let el = document.getElementById(id); if(el) el.pause(); });
-          document.querySelectorAll('.puzzle-overlay').forEach(el => el.style.display = 'none');
-          document.getElementById('game-over-screen').style.display = 'flex';
-          forceExitPointerLock();
+      function showMsg(text) { 
+          const box = document.getElementById('msg'); box.innerText = text; box.style.display = 'block'; 
+          if(currentLevel !== 4) setTimeout(() => { box.style.display = 'none'; }, 3500); 
       }
-      
-      function triggerFinale() {
-          // 【核心防护】：状态机死锁，防止由于射线重叠造成的无视关卡越权通关
-          if (currentLevel !== 4) return; 
 
+      // 彩蛋环境叙事 UI 逻辑
+      function showLore(title, text) {
           playAudioSafe('audio-ui');
-          document.getElementById('finale-screen').style.display = 'flex';
-          forceExitPointerLock();
+          const box = document.getElementById('lore');
+          box.innerHTML = `<div class="lore-title">【${title}】</div><div>${text}</div>`;
+          box.style.display = 'block';
+          if(loreTimer) clearTimeout(loreTimer);
+          loreTimer = setTimeout(() => { box.style.display = 'none'; }, 5000); // 5秒后自动消失，不打断沉浸感
       }
 
       function initGame(e) {
           document.getElementById('start-screen').style.display = 'none';
           document.getElementById('transition-screen').style.opacity = '0';
-          
           playAudioSafe('audio-door', 0.8);
-          
           setTimeout(() => { 
               currentBgmId = 'audio-bgm1'; 
               let bgm1 = document.getElementById('audio-bgm1'); 
@@ -291,51 +202,40 @@
           }, 2000);
       }
 
-      function openPuzzle(num) { 
-          if (num !== currentLevel) return; 
-          playAudioSafe('audio-ui'); 
-          forceExitPointerLock(); 
-          document.getElementById('puzzle-' + num).style.display = 'flex'; 
-      }
-      
-      function closePuzzle(num) { 
-          playAudioSafe('audio-ui'); 
-          document.getElementById('puzzle-' + num).style.display = 'none'; 
+      // 玩家点击石门的逻辑
+      function hitDoor(level) {
+          if (level !== currentLevel) return;
+          playAudioSafe('audio-ui');
+          if (level === 1) showMsg("石门死死锁住。角落里似乎有绿色的光芒闪烁...");
+          if (level === 2) showMsg("密道被封印。必须找到失落的【西域通关密卷】才能放行！");
+          if (level === 3) showMsg("青铜齿轮卡死！四周漂浮的红色阵核是关键...");
       }
 
-      function checkAnswer1(result) {
-        if (result === 'correct') {
-          playAudioSafe('audio-ui'); closePuzzle(1);
-          startTransition('机关轰鸣，天旋地转...', '#img-room2', 'hotspot-1', 'hotspot-2', '轰隆隆...\n石壁裂开，你进入了【胡商藏经阁】', 2, null, 'audio-door');
-        } else { triggerGameOver(); }
+      // 玩家找到并点击隐藏钥匙的逻辑
+      function hitKey(level) {
+          if (level !== currentLevel) return;
+          playAudioSafe('audio-ui');
+          document.getElementById('key-' + level).setAttribute('visible', 'false'); // 拿到钥匙后消失
+          
+          if (level === 1) {
+              startTransition('拾得【龙纹玉佩】！石门轰然洞开...', '#img-room2', 1, 2, '你进入了【胡商藏经阁】\n寻找下一把密卷钥匙', null, 'audio-door');
+          } else if (level === 2) {
+              startTransition('寻回【通关密卷】！书架缓缓移开...', '#img-room3', 2, 3, '你进入了【青铜机关室】\n寻找最后一个阵核', 'audio-bgm2', 'audio-paper');
+          } else if (level === 3) {
+              startTransition('阵核归位！万丈佛光倾泻而出...', '#img-room4', 3, 4, '震撼！注视大佛，迎接你的宿命！', 'audio-bgm3', 'audio-metal');
+          }
       }
 
-      function checkAnswer2(result) {
-        if (result === 'correct') {
-          playAudioSafe('audio-ui'); closePuzzle(2);
-          startTransition('丝帛燃烧，书架缓缓移开...', '#img-room3', 'hotspot-2', 'hotspot-3', '你发现了深渊底部的【青铜机关室】！', 3, 'audio-bgm2', 'audio-paper');
-        } else { triggerGameOver(); }
-      }
-
-      function checkAnswer3(result) {
-        if (result === 'correct') {
-          playAudioSafe('audio-ui'); closePuzzle(3);
-          startTransition('青铜巨门缓缓开启，万丈佛光倾泻而出...', '#img-room4', 'hotspot-3', null, '震撼！触摸大佛，获取终极奖励！', 4, 'audio-bgm3', 'audio-metal');
-        } else { triggerGameOver(); }
-      }
-
-      function startTransition(transTextMsg, nextImageId, oldHotspotId, newHotspotId, successMsg, nextLevelNum, nextBgmTargetId, transSfxId) {
+      function startTransition(transTextMsg, nextImageId, oldLevelNum, newLevelNum, successMsg, nextBgmTargetId, transSfxId) {
         const transScreen = document.getElementById('transition-screen');
         const transText = document.getElementById('trans-text');
         const dynLight = document.getElementById('dynamic-light');
         const dustFx = document.getElementById('dust-particles');
         
-        cancelGaze(); 
-        
         transText.innerText = transTextMsg; 
         transScreen.style.opacity = '1';
         transScreen.style.pointerEvents = 'auto'; 
-        currentLevel = -1; 
+        currentLevel = -1; // 锁定状态机
         
         if(transSfxId) playAudioSafe(transSfxId, 0.8); 
 
@@ -345,17 +245,35 @@
           if(nextImageId) document.getElementById('main-sky').setAttribute('src', nextImageId); 
           if (nextBgmTargetId) switchBGM(nextBgmTargetId);
 
-          if (nextLevelNum === 3) {
+          // 权限转移：剥夺旧房间交互权，赋予新房间交互权
+          if (oldLevelNum) {
+              let oldGroup = document.getElementById(`level-${oldLevelNum}-entities`);
+              if (oldGroup) {
+                  oldGroup.setAttribute('visible', 'false');
+                  Array.from(oldGroup.querySelectorAll('.interactive')).forEach(el => el.classList.remove('interactive'));
+              }
+          }
+
+          if (newLevelNum && newLevelNum <= 3) {
+              let newGroup = document.getElementById(`level-${newLevelNum}-entities`);
+              if (newGroup) {
+                  newGroup.setAttribute('visible', 'true');
+                  // 重新激活新区域的所有交互元素
+                  let keys = ['hotspot', 'key'];
+                  keys.forEach(k => {
+                      let el = document.getElementById(`${k}-${newLevelNum}`);
+                      if(el) el.classList.add('interactive');
+                  });
+                  // 激活当前区域的彩蛋
+                  Array.from(newGroup.querySelectorAll('a-octahedron')).forEach(el => el.classList.add('interactive'));
+              }
+          }
+
+          if (newLevelNum === 3) {
               dynLight.setAttribute('color', '#00FFFF');
-          } else if (nextLevelNum === 4) {
-              dynLight.setAttribute('visible', 'false');
+          } else if (newLevelNum === 4) {
+              dynLight.setAttribute('color', '#FFD700');
               dustFx.setAttribute('visible', 'true');
-              const spheres = dustFx.querySelectorAll('a-sphere');
-              spheres.forEach(sphere => {
-                  sphere.setAttribute('color', '#FFD700');
-                  sphere.setAttribute('opacity', '0.8');
-                  sphere.setAttribute('radius', '0.02'); 
-              });
               
               let finaleHotspot = document.getElementById('hotspot-finale');
               finaleHotspot.setAttribute('visible', 'true');
@@ -365,21 +283,6 @@
               }, 150);
           }
 
-          if(oldHotspotId) {
-            let oldEl = document.getElementById(oldHotspotId);
-            oldEl.setAttribute('visible', 'false'); 
-            let clickArea = oldEl.tagName === 'A-CIRCLE' ? oldEl : oldEl.querySelector('a-circle');
-            if (clickArea) clickArea.classList.remove('interactive'); 
-          }
-
-          if(newHotspotId) {
-            let newEl = document.getElementById(newHotspotId);
-            newEl.setAttribute('visible', 'true');
-            setTimeout(() => { 
-              let clickArea = newEl.tagName === 'A-CIRCLE' ? newEl : newEl.querySelector('a-circle');
-              if(clickArea) { clickArea.classList.remove('interactive'); void clickArea.offsetWidth; clickArea.classList.add('interactive'); }
-            }, 150);
-          }
         }, 1800);
 
         setTimeout(() => {
@@ -387,7 +290,7 @@
           transScreen.style.opacity = '0';
           transScreen.style.pointerEvents = 'none'; 
           
-          currentLevel = nextLevelNum;
+          currentLevel = newLevelNum;
           if (currentLevel === 4) {
              document.getElementById('msg').style.background = 'rgba(212, 175, 55, 0.9)';
              document.getElementById('msg').style.color = '#000';
@@ -396,69 +299,53 @@
         }, 4000);
       }
 
-      function showMsg(text) { 
-          const box = document.getElementById('msg'); box.innerText = text; box.style.display = 'block'; 
-          if(currentLevel !== 4) setTimeout(() => { box.style.display = 'none'; }, 3500); 
+      // === 【特性升级 3】：结局视觉奇观 ===
+      function triggerFinale() {
+          if (currentLevel !== 4) return; // 防护死锁
+          currentLevel = -1; // 锁定状态，防止重复点击
+          
+          document.getElementById('msg').style.display = 'none';
+          
+          // 播放神圣重低音
+          playAudioSafe('audio-metal', 1.0);
+          setTimeout(() => playAudioSafe('audio-door', 1.0), 500);
+
+          // 1. 光爆效果
+          let light = document.getElementById('dynamic-light');
+          light.removeAttribute('animation');
+          light.setAttribute('color', '#FFFFFF');
+          light.setAttribute('animation__burst', 'property: intensity; from: 0.6; to: 15; dur: 2500; easing: easeInExpo');
+
+          // 2. 粒子加速狂暴
+          let spheres = document.getElementById('dust-particles').querySelectorAll('a-sphere');
+          spheres.forEach(s => {
+              s.setAttribute('color', '#FFFFFF');
+              s.setAttribute('animation__pos', 'dur: 800'); // 加速乱飞
+          });
+
+          // 3. 屏幕白化
+          setTimeout(() => {
+              document.getElementById('supernova-screen').style.opacity = '1';
+          }, 1500);
+
+          // 4. 彻底平静，弹出大结局 UI
+          setTimeout(() => {
+              document.getElementById('finale-screen').style.display = 'flex';
+              forceExitPointerLock();
+          }, 3500);
       }
 
       function stayInRoom() {
           playAudioSafe('audio-ui');
           document.getElementById('finale-screen').style.display = 'none';
+          document.getElementById('supernova-screen').style.opacity = '0';
       }
 
       function restartGame() {
-          playAudioSafe('audio-ui');
-          const ids = ['audio-bgm1', 'audio-bgm2', 'audio-bgm3', 'audio-ui', 'audio-door', 'audio-paper', 'audio-metal'];
-          ids.forEach(id => { let el = document.getElementById(id); if(el) { el.pause(); el.currentTime = 0; } });
-          currentBgmId = null; 
-
-          document.querySelectorAll('.puzzle-overlay').forEach(el => el.style.display = 'none');
-          document.getElementById('game-over-screen').style.display = 'none';
-          document.getElementById('finale-screen').style.display = 'none';
-
-          currentLevel = 1; cancelGaze();
-
-          document.getElementById('main-sky').setAttribute('src', '#img-room1');
-          const dynLight = document.getElementById('dynamic-light');
-          dynLight.setAttribute('visible', 'true'); dynLight.setAttribute('color', '#FFAA00');
-          document.getElementById('dust-particles').setAttribute('visible', 'false');
-
-          let h1 = document.getElementById('hotspot-1');
-          h1.setAttribute('visible', 'true');
-          h1.classList.add('interactive');
-
-          ['hotspot-2', 'hotspot-3'].forEach(id => {
-              let el = document.getElementById(id); 
-              el.setAttribute('visible', 'false');
-              let clickArea = el.querySelector('a-circle'); 
-              if (clickArea) clickArea.classList.remove('interactive');
-          });
-          
-          let finaleHotspot = document.getElementById('hotspot-finale');
-          finaleHotspot.setAttribute('visible', 'false');
-          let fClickArea = finaleHotspot.querySelector('a-circle');
-          if (fClickArea) fClickArea.classList.remove('interactive');
-
-          let msgBox = document.getElementById('msg');
-          msgBox.style.background = 'rgba(15, 8, 3, 0.9)';
-          msgBox.style.color = '#fff';
-          msgBox.style.display = 'none';
-
-          document.getElementById('start-screen').style.display = 'flex';
+          // 刷新页面是最彻底的重置方案，清除所有引擎缓存
+          window.location.reload();
       }
 
-      document.addEventListener('keydown', function(event) {
-          if (event.key === 'Escape') {
-              if (document.getElementById('secret-panel-overlay').style.display === 'flex') {
-                  closeSecret();
-              }
-              for (let i = 1; i <= 3; i++) {
-                  if (document.getElementById('puzzle-' + i).style.display === 'flex') {
-                      closePuzzle(i);
-                  }
-              }
-          }
-      });
     </script>
   </body>
 </html>
