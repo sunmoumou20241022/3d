@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>寻宝洛阳 - PC 沉浸式最终版</title>
+    <title>寻宝洛阳 - 生死时速极限版</title>
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <style>
       body { font-family: '楷体', 'STKaiti', serif; margin: 0; overflow: hidden; background: #000; touch-action: none; }
@@ -15,6 +15,17 @@
       /* 环境叙事（绝笔信）专属 UI */
       .lore-box { background: rgba(10, 20, 30, 0.85); backdrop-filter: blur(5px); padding: 15px 30px; border-radius: 8px; display: none; font-size: 18px; color: #a0c0d0; border: 1px solid #5f9ea0; box-shadow: 0 0 20px rgba(95, 158, 160, 0.5); font-style: italic; max-width: 600px;}
       .lore-title { color: #5f9ea0; font-weight: bold; font-size: 20px; margin-bottom: 8px; font-style: normal;}
+
+      /* 缺氧倒计时 UI */
+      #timer-ui { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 999; display: none; font-size: 32px; font-weight: bold; color: #ffeb3b; text-shadow: 0 0 15px rgba(255, 235, 59, 0.8), 2px 2px 4px #000; background: rgba(0,0,0,0.5); padding: 8px 20px; border-radius: 8px; border: 2px solid #ffeb3b; pointer-events: none; letter-spacing: 2px; transition: all 0.3s;}
+      
+      /* 濒死心脏狂跳动画 */
+      @keyframes heartbeat {
+        0% { transform: translateX(-50%) scale(1); text-shadow: 0 0 20px #ff0000; box-shadow: 0 0 10px #ff0000 inset; }
+        50% { transform: translateX(-50%) scale(1.15); text-shadow: 0 0 40px #ff0000, 0 0 10px #fff; box-shadow: 0 0 30px #ff0000 inset; }
+        100% { transform: translateX(-50%) scale(1); text-shadow: 0 0 20px #ff0000; box-shadow: 0 0 10px #ff0000 inset; }
+      }
+      .danger-time { color: #ff3333 !important; border-color: #ff0000 !important; animation: heartbeat 0.8s infinite !important; }
 
       /* 彩蛋与结局面板层 */
       .puzzle-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 999; flex-direction: column; align-items: center; justify-content: center; }
@@ -51,13 +62,21 @@
         100% { box-shadow: 0 0 20px rgba(212, 175, 55, 0.5) inset, 0 0 35px rgba(212, 175, 55, 0.6); text-shadow: 0 0 15px rgba(212, 175, 55, 1); }
       }
 
-      /* 凝视加载动画与结局白屏特效 */
+      /* 结局黑屏与白屏特效 */
+      #game-over-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; }
+      .death-msg { color: #8b0000; font-family: '楷体', 'STKaiti', serif; text-align: center; animation: fadeBlood 4s forwards; }
+      .death-main { font-size: 35px; letter-spacing: 5px; margin-bottom: 20px; text-shadow: 0 0 20px #8b0000; font-weight: bold; }
+      .death-sub { font-size: 18px; color: #555; letter-spacing: 2px; }
+      @keyframes fadeBlood { 0% { opacity: 0; transform: scale(0.9); } 50% { opacity: 1; transform: scale(1); } 100% { opacity: 1; transform: scale(1); } }
+      
       #gaze-loader { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 40px; height: 40px; border: 4px solid transparent; border-top-color: #d4af37; border-radius: 50%; z-index: 100; display: none; pointer-events: none;}
       @keyframes spin { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(360deg); } }
       #supernova-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #FFF; z-index: 998; opacity: 0; pointer-events: none; transition: opacity 2s ease-in; }
     </style>
   </head>
   <body>
+
+    <div id="timer-ui">氧气余量：<span id="time-left">60</span>s</div>
 
     <div id="fs-btn" onclick="toggleFullScreen()">
       <svg viewBox="0 0 24 24">
@@ -68,6 +87,13 @@
     <div id="start-screen">
       <div class="game-title">寻宝洛阳</div>
       <button id="start-btn" onclick="initGame()">触碰石门，进入地宫</button>
+    </div>
+    <div id="game-over-screen">
+      <div class="death-msg">
+        <div class="death-main">线索错误，坠入迷局</div>
+        <div class="death-sub">密室机关闭合... 缺氧 Died.</div>
+      </div>
+      <button class="option-btn" style="background: transparent; color: #8b0000; border: 1px solid #8b0000; width: 200px; margin-top: 40px;" onclick="restartGame()">重新进入地宫</button>
     </div>
     
     <div id="supernova-screen"></div>
@@ -173,8 +199,58 @@
       let currentBgmId = null;
       let loreTimer = null;
       let gazeTimer = null;
+      
+      // 生死时速系统变量
+      let countdownInterval = null;
+      let timeLeft = 60;
+      const LEVEL_TIMES = { 1: 60, 2: 50, 3: 40 }; // 各关卡氧气上限递减
 
-      // 全屏控制
+      // 倒计时核心逻辑
+      function startTimer(level) {
+          stopTimer(); // 确保清理旧定时器
+          timeLeft = LEVEL_TIMES[level] || 60;
+          const timerUi = document.getElementById('timer-ui');
+          const timeSpan = document.getElementById('time-left');
+          
+          timerUi.style.display = 'block';
+          timerUi.classList.remove('danger-time');
+          timeSpan.innerText = timeLeft;
+
+          countdownInterval = setInterval(() => {
+              timeLeft--;
+              timeSpan.innerText = timeLeft;
+
+              // 压迫感反馈：最后10秒猩红警报
+              if (timeLeft <= 10 && !timerUi.classList.contains('danger-time')) {
+                  timerUi.classList.add('danger-time');
+              }
+              // 伴随心脏跳动音效或UI点击音效施压
+              if (timeLeft <= 10 && timeLeft > 0) {
+                  playAudioSafe('audio-ui', 0.3);
+              }
+
+              // 死亡审判
+              if (timeLeft <= 0) {
+                  stopTimer();
+                  triggerGameOver();
+              }
+          }, 1000);
+      }
+
+      function stopTimer() {
+          if (countdownInterval) clearInterval(countdownInterval);
+          document.getElementById('timer-ui').style.display = 'none';
+      }
+
+      function triggerGameOver() {
+          stopTimer(); // 停止倒计时
+          const ids = ['audio-bgm1', 'audio-bgm2', 'audio-bgm3', 'audio-ui', 'audio-door', 'audio-paper', 'audio-metal'];
+          ids.forEach(id => { let el = document.getElementById(id); if(el) el.pause(); });
+          
+          document.getElementById('game-over-screen').style.display = 'flex';
+          forceExitPointerLock();
+      }
+
       function toggleFullScreen() {
         if (!document.fullscreenElement) {
             document.documentElement.requestFullscreen().catch(err => console.log(`全屏被拦截: ${err.message}`));
@@ -222,14 +298,12 @@
           loreTimer = setTimeout(() => { box.style.display = 'none'; }, 5000); 
       }
 
-      // 唐朝秘闻彩蛋数据
       const tangSecrets = {
           1: { title: "雕版印刷术的黎明与文明的火种", text: "早在公元七世纪的初唐时期，充满智慧的中国匠人就已经发明并开始使用木板雕刻印刷术。这项伟大的技术创新打破了少数贵族阶层对教育资源的长期垄断，更为后来宋代毕昇发明活字印刷术奠定了最为坚实的基础，是中华民族对世界文明进程做出的不可磨灭的伟大贡献。", img: "Die_Buchdruckerei_by_Daniel_Chodowiecki_(150289207).jpg" },
           2: { title: "开国之君：唐高祖李渊的霸业", text: "公元618年，太原留守李渊顺应历史潮流起兵。作为大唐帝国的绝对奠基人，他不仅展现了卓越非凡的军事统帅能力，在稳固政权后更颁布了均田制与租庸调制；这位往往被后世演义所低估的开国皇帝，为长达近三百年的大唐盛世筑牢了最为坚固的根基。", img: "TangGaozu.jpg" },
           3: { title: "玄奘西行：丝绸之路上的文化苦旅", text: "唐朝贞观初年，高僧玄奘历经九死一生，穿越塔克拉玛干沙漠，翻越葱岭，耗时十余年，行程数万里。他带回珍贵梵文经典并潜心翻译。他口述的《大唐西域记》更让玄奘成为了中外文化交流史上最璀璨的使者。", img: "Xuanzang_w (1).jpg" }
       };
 
-      // 凝视系统（抬头看天花板彩蛋）
       function startGaze() {
           if (currentLevel < 1 || currentLevel > 3 || document.getElementById('secret-panel-overlay').style.display === 'flex') return;
           const loader = document.getElementById('gaze-loader');
@@ -248,7 +322,7 @@
       function triggerSecret(level) {
           cancelGaze(); 
           playAudioSafe('audio-ui');
-          forceExitPointerLock(); // 释放鼠标以便点击关闭按钮
+          forceExitPointerLock(); 
 
           const data = tangSecrets[level];
           document.getElementById('secret-title').innerText = data.title;
@@ -268,7 +342,6 @@
           document.getElementById('secret-panel-overlay').style.display = 'none';
       }
 
-      // 初始化游戏
       function initGame() {
           document.getElementById('start-screen').style.display = 'none';
           document.getElementById('transition-screen').style.opacity = '0';
@@ -277,10 +350,12 @@
               currentBgmId = 'audio-bgm1'; 
               let bgm1 = document.getElementById('audio-bgm1'); 
               if(bgm1) { bgm1.volume = 0.5; bgm1.play().catch(e=>{}); } 
+              
+              // 地宫开启，第一关倒计时开始！
+              startTimer(1);
           }, 2000);
       }
 
-      // 点击门提示
       function hitDoor(level) {
           if (level !== currentLevel) return;
           playAudioSafe('audio-ui');
@@ -289,10 +364,10 @@
           if (level === 3) showMsg("青铜齿轮卡死！寻找悬浮在空中的红色【阵核】...");
       }
 
-      // 点击钥匙通关
       function hitKey(level) {
           if (level !== currentLevel) return;
           playAudioSafe('audio-ui');
+          stopTimer(); // 找到钥匙，瞬间冻结倒计时，死里逃生！
           document.getElementById('key-' + level).setAttribute('visible', 'false'); 
           
           if (level === 1) {
@@ -369,6 +444,9 @@
           if (currentLevel === 4) {
              document.getElementById('msg').style.background = 'rgba(212, 175, 55, 0.9)';
              document.getElementById('msg').style.color = '#000';
+          } else if (currentLevel <= 3) {
+             // 只有进入 1-3 关才会重新开启倒计时
+             startTimer(currentLevel);
           }
           setTimeout(() => { showMsg(successMsg); }, 1500);
         }, 4000);
@@ -378,6 +456,7 @@
       function triggerFinale() {
           if (currentLevel !== 4) return; 
           currentLevel = -1; 
+          stopTimer();
           
           document.getElementById('msg').style.display = 'none';
           playAudioSafe('audio-metal', 1.0);
@@ -411,6 +490,7 @@
       }
 
       function restartGame() {
+          stopTimer(); // 强制清零避免幽灵定时器
           window.location.reload();
       }
 
